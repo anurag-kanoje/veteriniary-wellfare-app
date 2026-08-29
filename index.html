@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>वेट वेलफेयर ऐप - Vet Welfare App</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f9fafb;
+            color: #1f2937;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .title {
+            font-size: 32px;
+            font-weight: bold;
+            color: #1f2937;
+            margin-bottom: 8px;
+        }
+        
+        .subtitle {
+            font-size: 18px;
+            color: #6b7280;
+            margin-bottom: 4px;
+        }
+        
+        .description {
+            font-size: 14px;
+            color: #9ca3af;
+        }
+        
+        .features {
+            margin-bottom: 30px;
+        }
+        
+        .section-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #374151;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .feature-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        .feature-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-2px);
+        }
+        
+        .feature-icon {
+            font-size: 32px;
+            margin-bottom: 8px;
+        }
+        
+        .feature-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 4px;
+        }
+        
+        .feature-desc {
+            font-size: 12px;
+            color: #6b7280;
+        }
+        
+        .info-section {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .info-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 8px;
+        }
+        
+        .info-text {
+            font-size: 14px;
+            color: #6b7280;
+            margin-bottom: 4px;
+        }
+        
+        .info-subtext {
+            font-size: 12px;
+            color: #9ca3af;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .footer-text {
+            font-size: 12px;
+            color: #9ca3af;
+            margin-bottom: 4px;
+        }
+        
+        .status {
+            background: #10b981;
+            color: white;
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="status">
+            ✅ APP WORKING - HTML VERSION
+        </div>
+        
+        <div class="header">
+            <div class="title">वेट वेलफेयर ऐप</div>
+            <div class="subtitle">Vet Welfare App</div>
+            <div class="description">Rural Animal Welfare Platform</div>
+        </div>
+        
+        <div class="features">
+            <div class="section-title">मुख्य सुविधाएं / Main Features</div>
+            
+            <div class="feature-grid">
+                <div class="feature-card" onclick="alert('मेरे पशु / My Animals - Coming Soon!')">
+                    <div class="feature-icon">🐾</div>
+                    <div class="feature-title">मेरे पशु</div>
+                    <div class="feature-desc">Manage your animals</div>
+                </div>
+                
+                <div class="feature-card" onclick="alert('मेरी सलाह / My Consultations - Coming Soon!')">
+                    <div class="feature-icon">💊</div>
+                    <div class="feature-title">मेरी सलाह</div>
+                    <div class="feature-desc">Book consultations</div>
+                </div>
+                
+                <div class="feature-card" onclick="alert('बचाव रिपोर्ट / Rescue Report - Coming Soon!')">
+                    <div class="feature-icon">🚑</div>
+                    <div class="feature-title">बचाव रिपोर्ट</div>
+                    <div class="feature-desc">Report emergencies</div>
+                </div>
+                
+                <div class="feature-card" onclick="alert('दवाई उपलब्धता / Medicine Availability - Coming Soon!')">
+                    <div class="feature-icon">💊</div>
+                    <div class="feature-title">दवाई उपलब्धता</div>
+                    <div class="feature-desc">Find medicines</div>
+                </div>
+                
+                <div class="feature-card" onclick="alert('समुदाय / Community - Coming Soon!')">
+                    <div class="feature-icon">👥</div>
+                    <div class="feature-title">समुदाय</div>
+                    <div class="feature-desc">Connect with others</div>
+                </div>
+                
+                <div class="feature-card" onclick="alert('प्रोफाइल / Profile - Coming Soon!')">
+                    <div class="feature-icon">👤</div>
+                    <div class="feature-title">प्रोफाइल</div>
+                    <div class="feature-desc">Your profile</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="info-section">
+            <div class="info-title">ग्रामीण पशु कल्याण प्लेटफॉर्म</div>
+            <div class="info-text">Complete veterinary care platform for rural communities</div>
+            <div class="info-subtext">Hindi-First Design • Large Touch Targets • Easy Navigation</div>
+        </div>
+        
+        <div class="footer">
+            <div class="footer-text">Version 1.0.0 • Built for Rural India</div>
+            <div class="footer-text">© 2026 Vet Welfare Platform</div>
+            <div class="footer-text">✨ HTML Version - Works in Any Browser</div>
+        </div>
+    </div>
+</body>
+</html>

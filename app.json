@@ -1,0 +1,24 @@
+{
+  "expo": {
+    "name": "VetWelfare",
+    "slug": "vetwelfare",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.vetwelfare.app"
+    },
+    "android": {
+      "package": "com.vetwelfare.app",
+      "versionCode": 1
+    },
+    "updates": {
+      "enabled": false,
+      "fallbackToCacheTimeout": 0
+    }
+  }
+}
