@@ -19,6 +19,12 @@
     "updates": {
       "enabled": false,
       "fallbackToCacheTimeout": 0
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "2e66e309-f959-4fb5-909e-e23dea04bf5b"
+      }
+    },
+    "owner": "thanos2k25"
   }
 }

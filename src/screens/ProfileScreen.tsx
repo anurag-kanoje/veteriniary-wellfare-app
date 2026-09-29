@@ -16,6 +16,7 @@ import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { useAuth } from '../contexts/AuthContext';
+import { useLanguage } from '../contexts/LanguageContext';
 
 type Pet = {
   id: string;
@@ -79,14 +80,15 @@ const SettingItem = ({
 export default function ProfileScreen() {
   const navigation = useNavigation();
   const { user, signOut } = useAuth();
+  const { language, setLanguage } = useLanguage();
   
   const [isEditing, setIsEditing] = useState(false);
   const [profileImage, setProfileImage] = useState(require('../../assets/avatar0.jpg'));
-  const [name, setName] = useState(user?.user_metadata?.full_name || 'John Doe');
-  const [email, setEmail] = useState(user?.email || 'john.doe@example.com');
-  const [phone, setPhone] = useState('(123) 456-7890');
-  const [location, setLocation] = useState('New York, USA');
-  const [bio, setBio] = useState('Passionate pet lover and animal welfare advocate. Proud parent of two adorable cats and a golden retriever.');
+  const [name, setName] = useState(user?.user_metadata?.full_name || 'राजकुमार किसान');
+  const [email, setEmail] = useState(user?.email || 'kisan@example.com');
+  const [phone, setPhone] = useState(user?.user_metadata?.phone || '+91 98765 43210');
+  const [location, setLocation] = useState('रायपुर, छत्तीसगढ़');
+  const [bio, setBio] = useState('किसान, पशुपालक, गाय और बकरी पालन करता हूं। खेती और पशुपालन में रुचि है।');
   
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [darkMode, setDarkMode] = useState(false);
@@ -95,24 +97,34 @@ export default function ProfileScreen() {
   const [pets, setPets] = useState<Pet[]>([
     {
       id: '1',
-      name: 'Max',
-      type: 'Dog',
-      breed: 'Golden Retriever',
-      age: 3,
-      gender: 'Male',
+      name: 'गौरी',
+      type: 'गाय',
+      breed: 'गिर',
+      age: 4,
+      gender: 'Female',
       image: require('../../assets/pet1.jpg'),
-      lastVaccination: '2023-10-15',
-      nextAppointment: '2023-12-20',
+      lastVaccination: '2024-01-15',
+      nextAppointment: '2024-03-01',
     },
     {
       id: '2',
-      name: 'Luna',
-      type: 'Cat',
-      breed: 'Siamese',
+      name: 'राजू',
+      type: 'बैल',
+      breed: 'मुर्रा',
+      age: 5,
+      gender: 'Male',
+      image: require('../../assets/pet2.jpg'),
+      lastVaccination: '2024-01-20',
+    },
+    {
+      id: '3',
+      name: 'मोती',
+      type: 'बकरी',
+      breed: 'सानेन',
       age: 2,
       gender: 'Female',
-      image: require('../../assets/pet2.jpg'),
-      lastVaccination: '2023-09-20',
+      image: null,
+      lastVaccination: '2024-02-10',
     },
   ]);
 
@@ -179,7 +191,13 @@ export default function ProfileScreen() {
 
   const renderPetCard = (pet: Pet) => (
     <View key={pet.id} style={styles.petCard}>
-      <Image source={pet.image} style={styles.petImage} />
+      {pet.image ? (
+        <Image source={pet.image} style={styles.petImage} />
+      ) : (
+        <View style={[styles.petImage, styles.petImagePlaceholder]}>
+          <Ionicons name="paw" size={32} color="#9ca3af" />
+        </View>
+      )}
       <View style={styles.petInfo}>
         <View style={styles.petHeader}>
           <Text style={styles.petName}>{pet.name}</Text>
@@ -257,17 +275,23 @@ export default function ProfileScreen() {
               <View style={styles.statsContainer}>
                 <View style={styles.statItem}>
                   <Text style={styles.statNumber}>{pets.length}</Text>
-                  <Text style={styles.statLabel}>Pets</Text>
+                  <Text style={styles.statLabel}>
+                    {language === 'hi' ? 'पशु' : language === 'cg' ? 'पशु' : 'Animals'}
+                  </Text>
                 </View>
                 <View style={styles.statDivider} />
                 <View style={styles.statItem}>
-                  <Text style={styles.statNumber}>42</Text>
-                  <Text style={styles.statLabel}>Following</Text>
+                  <Text style={styles.statNumber}>15</Text>
+                  <Text style={styles.statLabel}>
+                    {language === 'hi' ? 'साल' : language === 'cg' ? 'साल' : 'Years'}
+                  </Text>
                 </View>
                 <View style={styles.statDivider} />
                 <View style={styles.statItem}>
-                  <Text style={styles.statNumber}>128</Text>
-                  <Text style={styles.statLabel}>Followers</Text>
+                  <Text style={styles.statNumber}>छत्तीसगढ़</Text>
+                  <Text style={styles.statLabel}>
+                    {language === 'hi' ? 'राज्य' : language === 'cg' ? 'राज्य' : 'State'}
+                  </Text>
                 </View>
               </View>
             </View>
@@ -303,13 +327,15 @@ export default function ProfileScreen() {
         
         {/* Bio */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>About Me</Text>
+          <Text style={styles.sectionTitle}>
+            {language === 'hi' ? 'मेरे बारे में' : language === 'cg' ? 'मोर बारे में' : 'About Me'}
+          </Text>
           {isEditing ? (
             <TextInput
               style={[styles.bioInput, styles.input]}
               value={bio}
               onChangeText={setBio}
-              placeholder="Tell us about yourself..."
+              placeholder={language === 'hi' ? 'अपने बारे में बताएं...' : language === 'cg' ? 'आपन बारे में बताब...' : 'Tell us about yourself...'}
               multiline
               numberOfLines={3}
             />
@@ -320,7 +346,9 @@ export default function ProfileScreen() {
         
         {/* Contact Info */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Contact Information</Text>
+          <Text style={styles.sectionTitle}>
+            {language === 'hi' ? 'संपर्क जानकारी' : language === 'cg' ? 'संपर्क जानकारी' : 'Contact Information'}
+          </Text>
           <View style={styles.infoItem}>
             <Ionicons name="mail" size={18} color="#6b7280" style={styles.infoIcon} />
             {isEditing ? (
@@ -368,7 +396,9 @@ export default function ProfileScreen() {
         {/* My Pets */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>My Pets</Text>
+            <Text style={styles.sectionTitle}>
+              {language === 'hi' ? 'मेरे पशु' : language === 'cg' ? 'मोर पशु' : 'My Animals'}
+            </Text>
             <TouchableOpacity onPress={handleAddPet}>
               <Ionicons name="add-circle" size={24} color="#4f46e5" />
             </TouchableOpacity>
@@ -381,13 +411,17 @@ export default function ProfileScreen() {
           ) : (
             <View style={styles.emptyPetsContainer}>
               <Ionicons name="paw" size={48} color="#e5e7eb" />
-              <Text style={styles.emptyPetsText}>No pets added yet</Text>
+              <Text style={styles.emptyPetsText}>
+                {language === 'hi' ? 'कोई पशु नहीं जोड़ा' : language === 'cg' ? 'कोई पशु ना जोड़े' : 'No animals added yet'}
+              </Text>
               <TouchableOpacity 
                 style={styles.addPetButton}
                 onPress={handleAddPet}
               >
                 <Ionicons name="add" size={20} color="#fff" />
-                <Text style={styles.addPetButtonText}>Add Pet</Text>
+                <Text style={styles.addPetButtonText}>
+                  {language === 'hi' ? 'पशु जोड़ें' : language === 'cg' ? 'पशु जोड़ब' : 'Add Animal'}
+                </Text>
               </TouchableOpacity>
             </View>
           )}
@@ -395,12 +429,25 @@ export default function ProfileScreen() {
         
         {/* Settings */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Settings</Text>
+          <Text style={styles.sectionTitle}>
+            {language === 'hi' ? 'सेटिंग्स' : language === 'cg' ? 'सेटिंग' : 'Settings'}
+          </Text>
           <View style={styles.settingsContainer}>
             <SettingItem
+              icon="language"
+              title={language === 'hi' ? 'भाषा' : language === 'cg' ? 'भाषा' : 'Language'}
+              subtitle={language === 'hi' ? 'हिंदी' : language === 'cg' ? 'छत्तीसगढ़ी' : 'English'}
+              onPress={() => {
+                if (language === 'en') setLanguage('hi');
+                else if (language === 'hi') setLanguage('cg');
+                else setLanguage('en');
+              }}
+            />
+            <View style={styles.divider} />
+            <SettingItem
               icon="notifications"
-              title="Notifications"
-              subtitle={notificationsEnabled ? 'On' : 'Off'}
+              title={language === 'hi' ? 'नोटिफिकेशन' : language === 'cg' ? 'नोटिफिकेशन' : 'Notifications'}
+              subtitle={notificationsEnabled ? (language === 'hi' ? 'चालू' : language === 'cg' ? 'चालू' : 'On') : (language === 'hi' ? 'बंद' : language === 'cg' ? 'बंद' : 'Off')}
               showSwitch
               switchValue={notificationsEnabled}
               onSwitchChange={setNotificationsEnabled}
@@ -408,7 +455,7 @@ export default function ProfileScreen() {
             <View style={styles.divider} />
             <SettingItem
               icon="moon"
-              title="Dark Mode"
+              title={language === 'hi' ? 'डार्क मोड' : language === 'cg' ? 'डार्क मोड' : 'Dark Mode'}
               showSwitch
               switchValue={darkMode}
               onSwitchChange={setDarkMode}
@@ -416,19 +463,19 @@ export default function ProfileScreen() {
             <View style={styles.divider} />
             <SettingItem
               icon="lock-closed"
-              title="Privacy"
+              title={language === 'hi' ? 'गोपनीयता' : language === 'cg' ? 'गोपनीयता' : 'Privacy'}
               onPress={() => navigation.navigate('Privacy')}
             />
             <View style={styles.divider} />
             <SettingItem
               icon="help-circle"
-              title="Help & Support"
+              title={language === 'hi' ? 'सहायता और समर्थन' : language === 'cg' ? 'मदद और सहायता' : 'Help & Support'}
               onPress={() => navigation.navigate('Support')}
             />
             <View style={styles.divider} />
             <SettingItem
               icon="information-circle"
-              title="About"
+              title={language === 'hi' ? 'के बारे में' : language === 'cg' ? 'बारे में' : 'About'}
               onPress={() => navigation.navigate('About')}
             />
           </View>
@@ -440,11 +487,15 @@ export default function ProfileScreen() {
           onPress={handleLogout}
         >
           <Ionicons name="log-out" size={20} color="#ef4444" />
-          <Text style={styles.logoutButtonText}>Log Out</Text>
+          <Text style={styles.logoutButtonText}>
+            {language === 'hi' ? 'लॉग आउट' : language === 'cg' ? 'लॉग आउट' : 'Log Out'}
+          </Text>
         </TouchableOpacity>
         
         <View style={styles.footer}>
-          <Text style={styles.versionText}>VetCare App v1.0.0</Text>
+          <Text style={styles.versionText}>
+            {language === 'hi' ? 'पशु कल्याण ऐप v1.0.0' : language === 'cg' ? 'पशु कल्याण ऐप v1.0.0' : 'Animal Welfare App v1.0.0'}
+          </Text>
         </View>
       </ScrollView>
       
@@ -458,21 +509,29 @@ export default function ProfileScreen() {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContainer}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Log Out</Text>
-              <Text style={styles.modalSubtitle}>Are you sure you want to log out?</Text>
+              <Text style={styles.modalTitle}>
+                {language === 'hi' ? 'लॉग आउट' : language === 'cg' ? 'लॉग आउट' : 'Log Out'}
+              </Text>
+              <Text style={styles.modalSubtitle}>
+                {language === 'hi' ? 'क्या आप लॉग आउट करना चाहते हैं?' : language === 'cg' ? 'के तोहर लॉग आउट करना चाही?' : 'Are you sure you want to log out?'}
+              </Text>
             </View>
             <View style={styles.modalButtons}>
               <TouchableOpacity 
                 style={[styles.modalButton, styles.cancelButton]}
                 onPress={() => setShowLogoutModal(false)}
               >
-                <Text style={[styles.modalButtonText, styles.cancelButtonText]}>Cancel</Text>
+                <Text style={[styles.modalButtonText, styles.cancelButtonText]}>
+                  {language === 'hi' ? 'रद्द करें' : language === 'cg' ? 'रद करब' : 'Cancel'}
+                </Text>
               </TouchableOpacity>
               <TouchableOpacity 
                 style={[styles.modalButton, styles.logoutConfirmButton]}
                 onPress={confirmLogout}
               >
-                <Text style={[styles.modalButtonText, styles.logoutConfirmButtonText]}>Log Out</Text>
+                <Text style={[styles.modalButtonText, styles.logoutConfirmButtonText]}>
+                  {language === 'hi' ? 'लॉग आउट' : language === 'cg' ? 'लॉग आउट' : 'Log Out'}
+                </Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -686,6 +745,11 @@ const styles = StyleSheet.create({
     height: 80,
     borderRadius: 8,
     marginRight: 12,
+  },
+  petImagePlaceholder: {
+    backgroundColor: '#f3f4f6',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   petInfo: {
     flex: 1,

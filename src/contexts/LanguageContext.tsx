@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 
-export type Language = 'en' | 'hi';
+export type Language = 'en' | 'hi' | 'cg';
 
 export interface Translation {
   [key: string]: string | Translation;
@@ -290,6 +290,144 @@ const translations: Record<Language, Translation> = {
     tryAgain: 'कृपया फिर से कोशिश करें',
     networkError: 'नेटवर्क त्रुटि। कृपया अपना कनेक्शन जांचें',
   },
+  cg: {
+    // Navigation
+    dashboard: 'डैशबोर्ड',
+    animals: 'पशु',
+    consultations: 'मशवरा',
+    community: 'समाज',
+    leaderboard: 'लीडरबोर्ड',
+    profile: 'प्रोफाइल',
+    
+    // Common
+    loading: 'लोड होवत हे...',
+    error: 'गलती',
+    success: 'सफलता',
+    cancel: 'रद करब',
+    save: 'सेव करब',
+    delete: 'मेटाब',
+    edit: 'सुधारब',
+    add: 'जोड़ब',
+    search: 'खोजब',
+    filter: 'फिल्टर',
+    back: 'पीछे',
+    next: 'आगे',
+    done: 'हो गय',
+    yes: 'हां',
+    no: 'ना',
+    ok: 'ठीक',
+    
+    // Auth
+    login: 'लॉग इन',
+    register: 'रजिस्टर',
+    logout: 'लॉग आउट',
+    email: 'ईमेल',
+    password: 'पासवर्ड',
+    confirmPassword: 'पासवर्ड कन्फर्म करब',
+    fullName: 'पूरा नाम',
+    phone: 'फोन',
+    role: 'भूमिका',
+    farmer: 'किसान',
+    vet: 'पशु डाक्टर',
+    admin: 'एडमिन',
+    
+    // Rescue
+    rescueReport: 'पशु बचाव रिपोर्ट',
+    animalType: 'पशु के प्रकार',
+    cow: 'गाय',
+    dog: 'कुत्ता',
+    goat: 'बकरी',
+    other: 'अन्य',
+    description: 'विवरण',
+    location: 'जगह',
+    captureLocation: 'जगह कैप्चर करब',
+    urgencyLevel: 'जरूरत के स्तर',
+    low: 'कम',
+    medium: 'मध्यम',
+    high: 'जादा',
+    critical: 'बहुत जरूरी',
+    photos: 'फोटो',
+    gallery: 'गैलरी',
+    camera: 'कैमरा',
+    contactPhone: 'संपर्क फोन',
+    submitReport: 'रिपोर्ट जमा करब',
+    reportSubmitted: 'रिपोर्ट जमा हो गय',
+    nearbyNGOsNotified: 'पास के एनजीओ ल सूचित कर दिय जाही',
+    
+    // Disease Knowledge
+    diseaseKnowledge: 'रोग ज्ञान',
+    symptoms: 'लक्षण',
+    causes: 'कारण',
+    firstAid: 'पहिल इलाज',
+    whenToCallVet: 'कब डाक्टर के बुलाब',
+    prevention: 'रोकथाम',
+    contagious: 'संक्रामक',
+    recoveryTime: 'ठीक होय के समय',
+    
+    // Tele-consultation
+    teleConsultation: 'टेली-कंसल्टेशन',
+    title: 'शीर्षक',
+    subject: 'विषय',
+    detailedDescription: 'विस्तृत विवरण',
+    preferredTime: 'पसंदीदा समय',
+    consultationRequest: 'मशवरा मांग',
+    requestSubmitted: 'मांग जमा हो गय',
+    vetWillContact: 'डाक्टर जल्दी संपर्क करहीं',
+    
+    // Medicine
+    medicineAvailability: 'दवा उपलब्धता',
+    medicines: 'दवाई',
+    stores: 'दुकान',
+    pharmacy: 'फार्मेसी',
+    veterinaryClinic: 'पशु डाक्टर क्लिनिक',
+    ngo: 'एनजीओ',
+    gaushala: 'गौशाला',
+    prescription: 'प्रिस्क्रिप्शन',
+    price: 'कीमत',
+    stock: 'स्टॉक',
+    delivery: 'डिलीवरी',
+    emergency: 'आपातकालीन',
+    verified: 'सत्यापित',
+    call: 'कॉल',
+    directions: 'दिशा',
+    
+    // Gaushala
+    gaushalaAnimals: 'गौशाला पशु',
+    addAnimal: 'पशु जोड़ब',
+    animalName: 'पशु के नाम',
+    tagNumber: 'टैग नंबर',
+    breed: 'नस्ल',
+    gender: 'लिंग',
+    male: 'नर',
+    female: 'मादा',
+    dateOfBirth: 'जन्म तारीख',
+    dateOfArrival: 'आय के तारीख',
+    healthStatus: 'सेहत के हाल',
+    excellent: 'बहुत अच्छा',
+    good: 'अच्छा',
+    fair: 'ठीक',
+    poor: 'खराब',
+    bull: 'सांड',
+    
+    // Medical Records
+    medicalRecords: 'मेडिकल रिकॉर्ड',
+    vaccination: 'टीका',
+    treatment: 'इलाज',
+    checkup: 'जांच',
+    medication: 'दवाई',
+    dosage: 'खुराक',
+    frequency: 'आवृत्ति',
+    duration: 'अवधि',
+    veterinarian: 'पशु डाक्टर',
+    
+    // Messages
+    fillRequiredFields: 'सब जरूरी फील्ड भरब',
+    operationSuccessful: 'काम सफल रहे',
+    operationFailed: 'काम फेल हो गय',
+    noDataFound: 'कोई डेटा ना मिले',
+    tryAgain: 'फिर से कोशिश करब',
+    networkError: 'नेटवर्क गलती। कनेक्शन जांच करब',
+  },
 };
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
@@ -337,7 +475,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     try {
       const saved = localStorage.getItem('preferred-language');
-      if (saved && (saved === 'en' || saved === 'hi')) {
+      if (saved && (saved === 'en' || saved === 'hi' || saved === 'cg')) {
         setLanguageState(saved);
       }
     } catch (error) {

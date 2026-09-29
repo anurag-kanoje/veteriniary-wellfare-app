@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image, TextInput, RefreshControl } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
+import { useLanguage } from '../contexts/LanguageContext';
 
 type Post = {
   id: string;
@@ -32,6 +33,7 @@ type Story = {
 
 export default function CommunityScreen() {
   const navigation = useNavigation();
+  const { language } = useLanguage();
   const [refreshing, setRefreshing] = useState(false);
   const [newPost, setNewPost] = useState('');
   const [posts, setPosts] = useState<Post[]>([
@@ -39,14 +41,18 @@ export default function CommunityScreen() {
       id: '1',
       user: {
         id: 'user1',
-        name: 'Dr. Sarah Johnson',
+        name: language === 'hi' ? 'डॉ. राजेश शर्मा' : language === 'cg' ? 'डॉ. राजेश शर्मा' : 'Dr. Rajesh Sharma',
         avatar: require('../../assets/avatar1.jpg'),
         role: 'Vet',
       },
-      content: 'Just performed an interesting surgery today. The patient, a 3-year-old golden retriever, made a full recovery! 🐕‍🦺',
+      content: language === 'hi' 
+        ? 'आज FMD टीकाकरण अभियान में 50 गायों का टीका किया। सभी किसान समय पर टीका लगवाएं। 🐄' 
+        : language === 'cg' 
+        ? 'आज एफएमडी टीका अभियान में 50 गाय के टीका करे। सब किसान समय पर टीका लगवाब। 🐄' 
+        : 'Vaccinated 50 cows in today\'s FMD campaign. All farmers should get their animals vaccinated on time. �',
       image: require('../../assets/post1.jpg'),
-      likes: 24,
-      comments: 8,
+      likes: 45,
+      comments: 12,
       timeAgo: '2h ago',
       isLiked: false,
       isFollowing: true,
@@ -55,24 +61,47 @@ export default function CommunityScreen() {
       id: '2',
       user: {
         id: 'user2',
-        name: 'Mike Peterson',
+        name: language === 'hi' ? 'रामकुमार किसान' : language === 'cg' ? 'रामकुमार किसान' : 'Ramkumar Farmer',
         avatar: require('../../assets/avatar2.jpg'),
         role: 'Pet Owner',
       },
-      content: 'Looking for recommendations for a good pet insurance provider. Any suggestions?',
-      likes: 12,
-      comments: 15,
+      content: language === 'hi' 
+        ? 'मेरी बकरी को खांसी हो रही है। कोई घरेलू उपाय बताएं? 🐐' 
+        : language === 'cg' 
+        ? 'मोर बकरी ल खांसी होवत हे। कोई घरेलू उपाय बताब? 🐐' 
+        : 'My goat has been coughing. Any home remedies? 🐐',
+      likes: 28,
+      comments: 23,
       timeAgo: '5h ago',
       isLiked: true,
       isFollowing: false,
     },
+    {
+      id: '3',
+      user: {
+        id: 'user3',
+        name: language === 'hi' ? 'गौशाला प्रबंधक' : language === 'cg' ? 'गौशाला प्रबंधक' : 'Gaushala Manager',
+        avatar: require('../../assets/avatar3.jpg'),
+        role: 'Admin',
+      },
+      content: language === 'hi' 
+        ? 'गौशाला में 5 नई गायें आई हैं। जो कोई बैल चाहिए, संपर्क करें। 🐂' 
+        : language === 'cg' 
+        ? 'गौशाला में 5 नवी गाय आई हे। जे कोई सांड चाही, संपर्क करब। 🐂' 
+        : '5 new cows arrived at the gaushala. Contact if anyone needs a bull. 🐂',
+      likes: 34,
+      comments: 8,
+      timeAgo: '1d ago',
+      isLiked: false,
+      isFollowing: true,
+    },
   ]);
 
   const stories: Story[] = [
-    { id: 's1', user: { id: 'user3', name: 'Jenny', avatar: require('../../assets/avatar3.jpg') }, hasUnseen: true },
-    { id: 's2', user: { id: 'user4', name: 'Alex', avatar: require('../../assets/avatar4.jpg') }, hasUnseen: true },
-    { id: 's3', user: { id: 'user5', name: 'Taylor', avatar: require('../../assets/avatar5.jpg') }, hasUnseen: false },
-    { id: 's4', user: { id: 'user6', name: 'Casey', avatar: require('../../assets/avatar6.jpg') }, hasUnseen: true },
+    { id: 's1', user: { id: 'user3', name: language === 'hi' ? 'सुरेंद्र' : language === 'cg' ? 'सुरेंद्र' : 'Surendra', avatar: require('../../assets/avatar3.jpg') }, hasUnseen: true },
+    { id: 's2', user: { id: 'user4', name: language === 'hi' ? 'मीना' : language === 'cg' ? 'मीना' : 'Meena', avatar: require('../../assets/avatar4.jpg') }, hasUnseen: true },
+    { id: 's3', user: { id: 'user5', name: language === 'hi' ? 'डॉ. प्रकाश' : language === 'cg' ? 'डॉ. प्रकाश' : 'Dr. Prakash', avatar: require('../../assets/avatar5.jpg') }, hasUnseen: false },
+    { id: 's4', user: { id: 'user6', name: language === 'hi' ? 'लक्ष्मी' : language === 'cg' ? 'लक्ष्मी' : 'Lakshmi', avatar: require('../../assets/avatar6.jpg') }, hasUnseen: true },
   ];
 
   const handleLike = (postId: string) => {
@@ -115,14 +144,14 @@ export default function CommunityScreen() {
       id: Date.now().toString(),
       user: {
         id: 'currentUser',
-        name: 'You',
+        name: language === 'hi' ? 'आप' : language === 'cg' ? 'तोहर' : 'You',
         avatar: require('../../assets/avatar0.jpg'),
         role: 'Pet Owner',
       },
       content: newPost,
       likes: 0,
       comments: 0,
-      timeAgo: 'Just now',
+      timeAgo: language === 'hi' ? 'अभी' : language === 'cg' ? 'अभी' : 'Just now',
       isLiked: false,
       isFollowing: false,
     };
@@ -222,21 +251,12 @@ export default function CommunityScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Community</Text>
+        <Text style={styles.title}>
+          {language === 'hi' ? 'समुदाय' : language === 'cg' ? 'समाज' : 'Community'}
+        </Text>
         <TouchableOpacity>
           <Ionicons name="notifications-outline" size={24} color="#111827" />
         </TouchableOpacity>
-      </View>
-      
-      <View style={styles.storiesContainer}>
-        <FlatList
-          data={stories}
-          renderItem={renderStory}
-          keyExtractor={item => item.id}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.storiesList}
-        />
       </View>
       
       <View style={styles.createPostContainer}>
@@ -246,7 +266,13 @@ export default function CommunityScreen() {
         />
         <TextInput
           style={styles.postInput}
-          placeholder="What's on your mind?"
+          placeholder={
+            language === 'hi' 
+              ? 'अपने मन की बात शेयर करें...' 
+              : language === 'cg' 
+              ? 'मन के बात शेयर करब...' 
+              : "What's on your mind?"
+          }
           placeholderTextColor="#9ca3af"
           value={newPost}
           onChangeText={setNewPost}

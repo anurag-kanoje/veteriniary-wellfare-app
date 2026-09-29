@@ -11,6 +11,7 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../contexts/AuthContext';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface Animal {
   id: string;
@@ -44,11 +45,32 @@ const SAMPLE_ANIMALS: Animal[] = [
     nextVaccination: '15 फरवरी 2024',
     image: null,
   },
+  {
+    id: '3',
+    name: 'राजू',
+    type: 'बैल',
+    breed: 'मुर्रा',
+    age: '5 साल',
+    lastVisit: '10 दिसंबर 2023',
+    nextVaccination: '20 फरवरी 2024',
+    image: null,
+  },
+  {
+    id: '4',
+    name: 'काली',
+    type: 'भैंस',
+    breed: 'जाफराबादी',
+    age: '3 साल',
+    lastVisit: '5 जनवरी 2024',
+    nextVaccination: '10 मार्च 2024',
+    image: null,
+  },
 ];
 
 export default function AnimalsScreen() {
   const navigation = useNavigation();
   const { user } = useAuth();
+  const { language } = useLanguage();
   const [showForm, setShowForm] = useState(false);
   const [animals, setAnimals] = useState<Animal[]>(SAMPLE_ANIMALS);
 
@@ -68,14 +90,14 @@ export default function AnimalsScreen() {
           <View style={styles.detailRow}>
             <Ionicons name="medical" size={16} color="#6b7280" />
             <Text style={styles.detailText}>
-              अगला टीका: {item.nextVaccination}
+              {language === 'hi' ? 'अगला टीका: ' : language === 'cg' ? 'अगला टीका: ' : 'Next vaccine: '}{item.nextVaccination}
             </Text>
           </View>
           {item.lastVisit && (
             <View style={styles.detailRow}>
               <Ionicons name="calendar" size={16} color="#6b7280" />
               <Text style={styles.detailText}>
-                पिछला दौरा: {item.lastVisit}
+                {language === 'hi' ? 'पिछला दौरा: ' : language === 'cg' ? 'पिछला दौरा: ' : 'Last visit: '}{item.lastVisit}
               </Text>
             </View>
           )}
@@ -88,14 +110,20 @@ export default function AnimalsScreen() {
 
   const renderAddPetForm = () => (
     <View style={styles.formContainer}>
-      <Text style={styles.formTitle}>नया पशु जोड़ें</Text>
-      <Text style={styles.formSubtitle}>फॉर्म भरने के लिए तैयार नहीं है</Text>
+      <Text style={styles.formTitle}>
+        {language === 'hi' ? 'नया पशु जोड़ें' : language === 'cg' ? 'नवा पशु जोड़ब' : 'Add New Animal'}
+      </Text>
+      <Text style={styles.formSubtitle}>
+        {language === 'hi' ? 'गाय, बैल, बकरी, भैंस आदि' : language === 'cg' ? 'गाय, सांड, बकरी, भैंस आदि' : 'Cow, bull, goat, buffalo, etc.'}
+      </Text>
       
       <TouchableOpacity
         style={styles.cancelButton}
         onPress={() => setShowForm(false)}
       >
-        <Text style={styles.cancelButtonText}>रद्द करें</Text>
+        <Text style={styles.cancelButtonText}>
+          {language === 'hi' ? 'रद्द करें' : language === 'cg' ? 'रद करब' : 'Cancel'}
+        </Text>
       </TouchableOpacity>
     </View>
   );
@@ -113,7 +141,9 @@ export default function AnimalsScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>मेरे पशु</Text>
+        <Text style={styles.title}>
+          {language === 'hi' ? 'मेरे पशु' : language === 'cg' ? 'मोर पशु' : 'My Animals'}
+        </Text>
         <TouchableOpacity
           style={styles.addButton}
           onPress={() => setShowForm(!showForm)}
@@ -132,7 +162,9 @@ export default function AnimalsScreen() {
           onPress={() => navigation.navigate('AddEditPet')}
         >
           <Ionicons name="add" size={24} color="#fff" />
-          <Text style={styles.floatingButtonText}>नया पशु जोड़ें</Text>
+          <Text style={styles.floatingButtonText}>
+            {language === 'hi' ? 'नया पशु जोड़ें' : language === 'cg' ? 'नवा पशु जोड़ब' : 'Add Animal'}
+          </Text>
         </TouchableOpacity>
       )}
     </View>
