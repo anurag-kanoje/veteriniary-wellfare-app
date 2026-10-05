@@ -10,6 +10,10 @@ export type UserProfile = {
   role: UserRole;
   avatar_url: string | null;
   phone: string | null;
+  address: string | null;
+  city: string | null;
+  state: string | null;
+  country: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -27,7 +31,7 @@ type AuthContextType = {
   ) => Promise<{ error: Error | null }>;
   signOut: () => Promise<{ error: Error | null }>;
   updateProfile: (
-    updates: Partial<Pick<UserProfile, 'full_name' | 'avatar_url' | 'phone' | 'role'>>
+    updates: Partial<Pick<UserProfile, 'full_name' | 'avatar_url' | 'phone' | 'role' | 'address' | 'city' | 'state'>>
   ) => Promise<{ error: Error | null }>;
   refreshSession: () => Promise<void>;
 };
@@ -40,35 +44,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Auto-login for demo
+  // Initialize auth state on mount
   useEffect(() => {
     const initializeAuth = async () => {
       try {
-        // Auto-login as demo user
-        const mockUser = {
-          id: '1',
-          email: 'demo@demo.com',
-          user_metadata: {
-            full_name: 'राजकुमार किसान',
-            role: 'farmer',
-            phone: '+91 98765 43210'
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          setUser(session.user);
+          setSession(session);
+          
+          // Fetch user profile from database
+          const { data: profileData } = await supabase
+            .from('users')
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
+          
+          if (profileData) {
+            setProfile(profileData as UserProfile);
           }
-        };
-        
-        const mockProfile: UserProfile = {
-          id: '1',
-          email: 'demo@demo.com',
-          full_name: 'राजकुमार किसान',
-          role: 'farmer',
-          avatar_url: null,
-          phone: '+91 98765 43210',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        };
-
-        setUser(mockUser);
-        setProfile(mockProfile);
-        setSession({ user: mockUser });
+        }
       } catch (error) {
         console.error('Auth initialization error:', error);
       } finally {
@@ -81,30 +76,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signIn = useCallback(async (email: string, password: string) => {
     try {
-      const result = await supabase.auth.signIn({ email, password });
-      const user = result.user;
-      const session = result.session;
-      const error = result.error;
-      
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
       if (error) {
         return { error };
       }
 
-      if (user && session) {
-        const mockProfile: UserProfile = {
-          id: user.id,
-          email: user.email || '',
-          full_name: (user as any).user_metadata?.full_name || 'Demo User',
-          role: (user as any).user_metadata?.role || 'farmer',
-          avatar_url: null,
-          phone: (user as any).user_metadata?.phone || null,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        };
-
-        setUser(user);
-        setProfile(mockProfile);
-        setSession(session);
+      if (data.user && data.session) {
+        setUser(data.user);
+        setSession(data.session);
+        
+        // Fetch user profile
+        const { data: profileData } = await supabase
+          .from('users')
+          .select('*')
+          .eq('id', data.user.id)
+          .single();
+        
+        if (profileData) {
+          setProfile(profileData as UserProfile);
+        }
       }
 
       return { error: null };
@@ -119,36 +113,44 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     userData: { full_name: string; role: UserRole; phone?: string }
   ) => {
     try {
-      const result = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          data: userData
-        }
+          data: {
+            full_name: userData.full_name,
+            role: userData.role,
+            phone: userData.phone,
+          },
+        },
       });
-      const user = result.user;
-      const session = result.session;
-      const error = result.error;
-      
+
       if (error) {
-        return { error: error as Error };
+        return { error };
       }
 
-      if (user) {
-        const mockProfile: UserProfile = {
-          id: user.id,
-          email: user.email || '',
-          full_name: userData.full_name,
-          role: userData.role,
-          avatar_url: null,
-          phone: userData.phone || null,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        };
-
-        setUser(user);
-        setProfile(mockProfile);
-        setSession(session);
+      if (data.user && data.session) {
+        setUser(data.user);
+        setSession(data.session);
+        
+        // Create user profile in database
+        const { data: profileData, error: profileError } = await supabase
+          .from('users')
+          .insert({
+            id: data.user.id,
+            email: data.user.email,
+            full_name: userData.full_name,
+            role: userData.role,
+            phone: userData.phone || null,
+          })
+          .select()
+          .single();
+        
+        if (profileError) {
+          console.error('Profile creation error:', profileError);
+        } else if (profileData) {
+          setProfile(profileData as UserProfile);
+        }
       }
 
       return { error: null };
@@ -159,58 +161,104 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = useCallback(async () => {
     try {
-      const result = await supabase.auth.signOut();
-      const error = result.error;
-      
-      if (error) {
-        return { error: error as Error };
-      }
-
+      const { error } = await supabase.auth.signOut();
       setUser(null);
       setProfile(null);
       setSession(null);
-      
-      return { error: null };
+      return { error };
     } catch (error) {
       return { error: error as Error };
     }
   }, []);
 
   const updateProfile = useCallback(async (
-    updates: Partial<Pick<UserProfile, 'full_name' | 'avatar_url' | 'phone' | 'role'>>
+    updates: Partial<Pick<UserProfile, 'full_name' | 'avatar_url' | 'phone' | 'role' | 'address' | 'city' | 'state'>>
   ) => {
     try {
-      if (profile) {
-        const updatedProfile = { 
-          ...profile, 
-          ...updates, 
-          updated_at: new Date().toISOString() 
-        };
-        setProfile(updatedProfile);
-        setUser((prev: any) => prev ? { ...prev, user_metadata: { ...prev.user_metadata, ...updates } } : null);
+      if (!user) {
+        return { error: new Error('No user logged in') };
       }
-      
+
+      const { data, error } = await supabase
+        .from('users')
+        .update({
+          ...updates,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', user.id)
+        .select()
+        .single();
+
+      if (error) {
+        return { error };
+      }
+
+      if (data) {
+        setProfile(data as UserProfile);
+      }
+
       return { error: null };
     } catch (error) {
       return { error: error as Error };
     }
-  }, [profile]);
+  }, [user]);
 
   const refreshSession = useCallback(async () => {
     try {
-      const result = await supabase.auth.getSession();
-      const session = result.session;
-      const error = result.error;
-      if (!error && session) {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
         setSession(session);
         setUser(session.user);
+        
+        // Fetch user profile
+        const { data: profileData } = await supabase
+          .from('users')
+          .select('*')
+          .eq('id', session.user.id)
+          .single();
+        
+        if (profileData) {
+          setProfile(profileData as UserProfile);
+        }
       }
     } catch (error) {
       console.error('Session refresh error:', error);
     }
   }, []);
 
-  const value: AuthContextType = {
+  useEffect(() => {
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (session) {
+          setUser(session.user);
+          setSession(session);
+          
+          // Fetch user profile
+          const { data: profileData } = await supabase
+            .from('users')
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
+          
+          if (profileData) {
+            setProfile(profileData as UserProfile);
+          }
+        } else {
+          setUser(null);
+          setProfile(null);
+          setSession(null);
+        }
+        setLoading(false);
+      }
+    );
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  const value = {
     user,
     profile,
     session,

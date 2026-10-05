@@ -17,7 +17,7 @@ import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../contexts/AuthContext';
 
-type RegisterRole = 'pet_owner' | 'veterinarian' | 'pet_sitter';
+type RegisterRole = 'farmer' | 'vet' | 'admin';
 
 export default function RegisterScreen() {
   const [fullName, setFullName] = useState('');
@@ -26,7 +26,7 @@ export default function RegisterScreen() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [role, setRole] = useState<RegisterRole>('pet_owner');
+  const [role, setRole] = useState<RegisterRole>('farmer');
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   
@@ -57,12 +57,10 @@ export default function RegisterScreen() {
 
     try {
       setIsLoading(true);
-      // Map RegisterRole to AuthContext UserRole
-      const authRole = role === 'veterinarian' ? 'vet' : 'farmer';
       await signUp(email, password, {
         full_name: fullName,
         phone,
-        role: authRole as any,
+        role: role,
       });
       // Navigation is handled by the AuthProvider after successful sign up
     } catch (error: any) {
@@ -221,69 +219,46 @@ export default function RegisterScreen() {
               <TouchableOpacity
                 style={[
                   styles.roleButton,
-                  role === 'pet_owner' && styles.roleButtonActive
+                  role === 'farmer' && styles.roleButtonActive
                 ]}
-                onPress={() => handleRoleChange('pet_owner')}
+                onPress={() => handleRoleChange('farmer')}
                 disabled={isLoading}
               >
-                <Ionicons 
-                  name="paw" 
-                  size={20} 
-                  color={role === 'pet_owner' ? '#fff' : '#4f46e5'} 
+                <Ionicons
+                  name="home"
+                  size={20}
+                  color={role === 'farmer' ? '#fff' : '#4f46e5'}
                 />
-                <Text 
+                <Text
                   style={[
                     styles.roleButtonText,
-                    role === 'pet_owner' && styles.roleButtonTextActive
+                    role === 'farmer' && styles.roleButtonTextActive
                   ]}
                 >
-                  Pet Owner
+                  Farmer / Pet Owner
                 </Text>
               </TouchableOpacity>
-              
+
               <TouchableOpacity
                 style={[
                   styles.roleButton,
-                  role === 'veterinarian' && styles.roleButtonActive
+                  role === 'vet' && styles.roleButtonActive
                 ]}
-                onPress={() => handleRoleChange('veterinarian')}
+                onPress={() => handleRoleChange('vet')}
                 disabled={isLoading}
               >
-                <Ionicons 
-                  name="medical" 
-                  size={20} 
-                  color={role === 'veterinarian' ? '#fff' : '#4f46e5'} 
+                <Ionicons
+                  name="medical"
+                  size={20}
+                  color={role === 'vet' ? '#fff' : '#4f46e5'}
                 />
-                <Text 
+                <Text
                   style={[
                     styles.roleButtonText,
-                    role === 'veterinarian' && styles.roleButtonTextActive
+                    role === 'vet' && styles.roleButtonTextActive
                   ]}
                 >
                   Veterinarian
-                </Text>
-              </TouchableOpacity>
-              
-              <TouchableOpacity
-                style={[
-                  styles.roleButton,
-                  role === 'pet_sitter' && styles.roleButtonActive
-                ]}
-                onPress={() => handleRoleChange('pet_sitter')}
-                disabled={isLoading}
-              >
-                <Ionicons 
-                  name="home" 
-                  size={20} 
-                  color={role === 'pet_sitter' ? '#fff' : '#4f46e5'} 
-                />
-                <Text 
-                  style={[
-                    styles.roleButtonText,
-                    role === 'pet_sitter' && styles.roleButtonTextActive
-                  ]}
-                >
-                  Pet Sitter
                 </Text>
               </TouchableOpacity>
             </View>

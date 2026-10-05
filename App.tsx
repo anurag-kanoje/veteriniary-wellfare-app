@@ -5,8 +5,9 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { Ionicons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { ActivityIndicator, View, Text } from 'react-native';
 
-import { AuthProvider } from './src/contexts/AuthContext';
+import { AuthProvider, useAuth } from './src/contexts/AuthContext';
 import { LanguageProvider } from './src/contexts/LanguageContext';
 import { OfflineProvider } from './src/contexts/OfflineContext';
 
@@ -20,9 +21,20 @@ import RescueScreen from './src/screens/RescueScreen';
 import MedicineScreen from './src/screens/MedicineScreen';
 import DiseaseKnowledgeScreen from './src/screens/DiseaseKnowledgeScreen';
 import GaushalaScreen from './src/screens/GaushalaScreen';
+import LoginScreen from './src/screens/LoginScreen';
+import RegisterScreen from './src/screens/RegisterScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
+
+function AuthStack() {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="Login" component={LoginScreen} />
+      <Stack.Screen name="Register" component={RegisterScreen} />
+    </Stack.Navigator>
+  );
+}
 
 function DashboardStack() {
   return (
@@ -74,6 +86,25 @@ function MainTabs() {
   );
 }
 
+function AppNavigator() {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#f9fafb' }}>
+        <ActivityIndicator size="large" color="#4f46e5" />
+        <Text style={{ marginTop: 16, color: '#6b7280' }}>Loading...</Text>
+      </View>
+    );
+  }
+
+  if (!user) {
+    return <AuthStack />;
+  }
+
+  return <MainTabs />;
+}
+
 export default function App() {
   return (
     <SafeAreaProvider>
@@ -82,7 +113,7 @@ export default function App() {
           <AuthProvider>
             <NavigationContainer>
               <StatusBar style="auto" />
-              <MainTabs />
+              <AppNavigator />
             </NavigationContainer>
           </AuthProvider>
         </LanguageProvider>
