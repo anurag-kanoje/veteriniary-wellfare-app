@@ -23,6 +23,8 @@ import DiseaseKnowledgeScreen from './src/screens/DiseaseKnowledgeScreen';
 import GaushalaScreen from './src/screens/GaushalaScreen';
 import LoginScreen from './src/screens/LoginScreen';
 import RegisterScreen from './src/screens/RegisterScreen';
+import AddEditAnimalScreen from './src/screens/AddEditAnimalScreen';
+import AnimalProfileScreen from './src/screens/AnimalProfileScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -44,6 +46,16 @@ function DashboardStack() {
       <Stack.Screen name="Medicine" component={MedicineScreen} />
       <Stack.Screen name="DiseaseKnowledge" component={DiseaseKnowledgeScreen} />
       <Stack.Screen name="Gaushala" component={GaushalaScreen} />
+    </Stack.Navigator>
+  );
+}
+
+function AnimalsStack() {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="AnimalsList" component={AnimalsScreen} />
+      <Stack.Screen name="AddEditAnimal" component={AddEditAnimalScreen} />
+      <Stack.Screen name="AnimalProfile" component={AnimalProfileScreen} />
     </Stack.Navigator>
   );
 }
@@ -77,7 +89,7 @@ function MainTabs() {
       })}
     >
       <Tab.Screen name="Dashboard" component={DashboardStack} />
-      <Tab.Screen name="Animals" component={AnimalsScreen} />
+      <Tab.Screen name="Animals" component={AnimalsStack} />
       <Tab.Screen name="Consultations" component={ConsultationsScreen} />
       <Tab.Screen name="Community" component={CommunityScreen} />
       <Tab.Screen name="Leaderboard" component={LeaderboardScreen} />

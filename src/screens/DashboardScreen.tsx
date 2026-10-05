@@ -1,10 +1,11 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useOffline } from '../contexts/OfflineContext';
+import { AnimalService } from '../services/AnimalService';
 
 type StatCardProps = {
   title: string;
@@ -15,7 +16,7 @@ type StatCardProps = {
 };
 
 const StatCard = ({ title, value, icon, color, onPress }: StatCardProps) => (
-  <TouchableOpacity 
+  <TouchableOpacity
     style={[styles.statCard, { backgroundColor: color + '20', borderLeftColor: color }]}
     onPress={onPress}
   >
@@ -34,32 +35,49 @@ export default function DashboardScreen() {
   const { profile } = useAuth();
   const { t, language } = useLanguage();
   const { isOffline } = useOffline();
+  const [animalCount, setAnimalCount] = useState(0);
+  const [loadingAnimals, setLoadingAnimals] = useState(true);
+
+  useEffect(() => {
+    loadAnimalCount();
+  }, []);
+
+  const loadAnimalCount = async () => {
+    try {
+      const { data } = await AnimalService.getMyAnimals();
+      setAnimalCount(data?.length || 0);
+    } catch (err) {
+      console.error('Failed to load animal count:', err);
+    } finally {
+      setLoadingAnimals(false);
+    }
+  };
 
   const stats = [
     {
       title: language === 'hi' ? 'मेरे पशु' : language === 'cg' ? 'मोर पशु' : 'My Animals',
-      value: '12',
+      value: loadingAnimals ? '...' : animalCount,
       icon: 'paw',
       color: '#4f46e5',
       onPress: () => navigation.navigate('Animals')
     },
     {
       title: language === 'hi' ? 'आने वाली सलाह' : language === 'cg' ? 'आवत मशवरा' : 'Upcoming Consultations',
-      value: '3',
+      value: '0',
       icon: 'calendar',
       color: '#10b981',
       onPress: () => navigation.navigate('Consultations')
     },
     {
       title: language === 'hi' ? 'बचाव रिपोर्ट' : language === 'cg' ? 'बचाव रिपोर्ट' : 'Rescue Reports',
-      value: '2',
+      value: '0',
       icon: 'alert-circle',
       color: '#ef4444',
       onPress: () => navigation.navigate('Rescue')
     },
     {
       title: language === 'hi' ? 'समुदाय पोस्ट' : language === 'cg' ? 'समाज पोस्ट' : 'Community Posts',
-      value: '8',
+      value: '0',
       icon: 'chatbubbles',
       color: '#f59e0b',
       onPress: () => navigation.navigate('Community')
@@ -76,7 +94,7 @@ export default function DashboardScreen() {
           </Text>
         </View>
       )}
-      
+
       <View style={styles.header}>
         <Text style={styles.greeting}>
           {language === 'hi' ? 'नमस्ते' : language === 'cg' ? 'नमस्कार' : 'Hello'}, {profile?.full_name?.split(' ')[0] || 'किसान'}!
@@ -101,41 +119,41 @@ export default function DashboardScreen() {
         
         <View style={styles.actionsGrid}>
           {[
-            { 
-              icon: 'add-circle', 
-              label: language === 'hi' ? 'नया पशु' : language === 'cg' ? 'नवा पशु' : 'New Animal', 
-              screen: 'Animals' 
+            {
+              icon: 'add-circle',
+              label: language === 'hi' ? 'नया पशु' : language === 'cg' ? 'नवा पशु' : 'New Animal',
+              action: () => navigation.navigate('Animals' as never)
             },
-            { 
-              icon: 'medkit', 
-              label: language === 'hi' ? 'बचाव रिपोर्ट' : language === 'cg' ? 'बचाव रिपोर्ट' : 'Rescue Report', 
-              screen: 'Rescue' 
+            {
+              icon: 'medkit',
+              label: language === 'hi' ? 'बचाव रिपोर्ट' : language === 'cg' ? 'बचाव रिपोर्ट' : 'Rescue Report',
+              action: () => navigation.navigate('Rescue' as never)
             },
-            { 
-              icon: 'chatbubbles', 
-              label: language === 'hi' ? 'डॉक्टर से बात' : language === 'cg' ? 'डाक्टर से बात' : 'Consult Vet', 
-              screen: 'Consultations' 
+            {
+              icon: 'chatbubbles',
+              label: language === 'hi' ? 'डॉक्टर से बात' : language === 'cg' ? 'डाक्टर से बात' : 'Consult Vet',
+              action: () => navigation.navigate('Consultations' as never)
             },
-            { 
-              icon: 'medical', 
-              label: language === 'hi' ? 'दवा खोजें' : language === 'cg' ? 'दवा खोजब' : 'Find Medicine', 
-              screen: 'Medicine' 
+            {
+              icon: 'medical',
+              label: language === 'hi' ? 'दवा खोजें' : language === 'cg' ? 'दवा खोजब' : 'Find Medicine',
+              action: () => navigation.navigate('Medicine' as never)
             },
-            { 
-              icon: 'book', 
-              label: language === 'hi' ? 'रोग जानकारी' : language === 'cg' ? 'रोग जानकारी' : 'Disease Info', 
-              screen: 'DiseaseKnowledge' 
+            {
+              icon: 'book',
+              label: language === 'hi' ? 'रोग जानकारी' : language === 'cg' ? 'रोग जानकारी' : 'Disease Info',
+              action: () => navigation.navigate('DiseaseKnowledge' as never)
             },
-            { 
-              icon: 'home', 
-              label: language === 'hi' ? 'गौशाला' : language === 'cg' ? 'गौशाला' : 'Gaushala', 
-              screen: 'Gaushala' 
+            {
+              icon: 'home',
+              label: language === 'hi' ? 'गौशाला' : language === 'cg' ? 'गौशाला' : 'Gaushala',
+              action: () => navigation.navigate('Gaushala' as never)
             },
           ].map((action, index) => (
-            <TouchableOpacity 
-              key={index} 
+            <TouchableOpacity
+              key={index}
               style={styles.actionButton}
-              onPress={() => navigation.navigate(action.screen as never)}
+              onPress={action.action}
             >
               <View style={styles.actionIcon}>
                 <Ionicons name={action.icon as any} size={24} color="#4f46e5" />
@@ -146,66 +164,25 @@ export default function DashboardScreen() {
         </View>
       </View>
 
-      <View style={styles.section}>
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>
-            {language === 'hi' ? 'हालिया गतिविधि' : language === 'cg' ? 'अभी गतिविधि' : 'Recent Activity'}
-          </Text>
+      {animalCount === 0 && (
+        <View style={styles.section}>
+          <View style={styles.emptyState}>
+            <Ionicons name="paw-outline" size={48} color="#d1d5db" />
+            <Text style={styles.emptyTitle}>
+              {language === 'hi' ? 'अपना पशु जोड़ना शुरू करें' : language === 'cg' ? 'तोहर पशु जोड़ना शुरू करब' : 'Start by adding your first animal'}
+            </Text>
+            <TouchableOpacity
+              style={styles.primaryButton}
+              onPress={() => navigation.navigate('Animals' as never)}
+            >
+              <Ionicons name="add" size={20} color="#fff" />
+              <Text style={styles.primaryButtonText}>
+                {language === 'hi' ? 'पशु जोड़ें' : language === 'cg' ? 'पशु जोड़ब' : 'Add Animal'}
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
-        
-        <View style={styles.activityList}>
-          {[
-            { 
-              id: 1, 
-              title: language === 'hi' ? 'टीकाकरण बाकी' : language === 'cg' ? 'टीका बाकी' : 'Vaccination Due', 
-              description: language === 'hi' ? 'गौरी गाय के लिए FMD टीका' : language === 'cg' ? 'गौरी गाय खर एफएमडी टीका' : 'FMD vaccine for Gauri cow', 
-              date: language === 'hi' ? 'कल' : language === 'cg' ? 'नाथा' : 'Tomorrow', 
-              type: 'alert' 
-            },
-            { 
-              id: 2, 
-              title: language === 'hi' ? 'डॉक्टर मिलना तय' : language === 'cg' ? 'डाक्टर मिलना तय' : 'Vet Visit Confirmed', 
-              description: language === 'hi' ? 'डॉ. शर्मा जी - मोती बकरी की जांच' : language === 'cg' ? 'डॉ. शर्मा - मोती बकरी जांच' : 'Dr. Sharma - Moti goat checkup', 
-              date: language === 'hi' ? '20 जून 2024' : language === 'cg' ? '20 जून 2024' : 'Jun 20, 2024', 
-              type: 'info' 
-            },
-            { 
-              id: 3, 
-              title: language === 'hi' ? 'नया संदेश' : language === 'cg' ? 'नवा संदेश' : 'New Message', 
-              description: language === 'hi' ? 'गौशाला से - बैल के बारे में' : language === 'cg' ? 'गौशाला ल - सांड बारे में' : 'From Gaushala - about bull', 
-              date: language === 'hi' ? '2 घंटे पहले' : language === 'cg' ? '2 घंटा पहिली' : '2h ago', 
-              type: 'message' 
-            },
-          ].map((activity) => (
-            <View key={activity.id} style={styles.activityItem}>
-              <View style={[
-                styles.activityIcon,
-                { backgroundColor: 
-                  activity.type === 'alert' ? '#fef2f2' : 
-                  activity.type === 'message' ? '#eff6ff' : '#f0fdf4'
-                }
-              ]}>
-                <Ionicons 
-                  name={
-                    activity.type === 'alert' ? 'alert-circle' :
-                    activity.type === 'message' ? 'chatbubble' : 'checkmark-circle'
-                  } 
-                  size={20} 
-                  color={
-                    activity.type === 'alert' ? '#dc2626' :
-                    activity.type === 'message' ? '#2563eb' : '#16a34a'
-                  } 
-                />
-              </View>
-              <View style={styles.activityContent}>
-                <Text style={styles.activityTitle}>{activity.title}</Text>
-                <Text style={styles.activityDescription} numberOfLines={1}>{activity.description}</Text>
-              </View>
-              <Text style={styles.activityDate}>{activity.date}</Text>
-            </View>
-          ))}
-        </View>
-      </View>
+      )}
     </ScrollView>
   );
 }
@@ -352,5 +329,30 @@ const styles = StyleSheet.create({
   activityDate: {
     fontSize: 12,
     color: '#9ca3af',
+  },
+  emptyState: {
+    alignItems: 'center',
+    paddingVertical: 32,
+  },
+  emptyTitle: {
+    fontSize: 16,
+    color: '#6b7280',
+    marginTop: 12,
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  primaryButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#4f46e5',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 24,
+  },
+  primaryButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+    marginLeft: 8,
   },
 });
