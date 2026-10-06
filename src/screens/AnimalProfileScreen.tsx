@@ -13,6 +13,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { AnimalService, Animal } from '../services/AnimalService';
+import { HealthRecordService, HealthRecord } from '../services/HealthRecordService';
 
 type RouteParams = {
   AnimalProfile: {
@@ -26,11 +27,14 @@ export default function AnimalProfileScreen() {
   const { animalId } = route.params;
   const { language } = useLanguage();
   const [animal, setAnimal] = useState<Animal | null>(null);
+  const [healthRecords, setHealthRecords] = useState<HealthRecord[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingRecords, setLoadingRecords] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     loadAnimal();
+    loadHealthRecords();
   }, [animalId]);
 
   const loadAnimal = async () => {
@@ -48,6 +52,22 @@ export default function AnimalProfileScreen() {
       navigation.goBack();
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadHealthRecords = async () => {
+    setLoadingRecords(true);
+    try {
+      const { data, error } = await HealthRecordService.getAnimalHealthRecords(animalId);
+      if (error) {
+        console.error('Failed to load health records:', error);
+      } else {
+        setHealthRecords(data || []);
+      }
+    } catch (err: any) {
+      console.error('Failed to load health records:', err);
+    } finally {
+      setLoadingRecords(false);
     }
   };
 
@@ -198,6 +218,68 @@ export default function AnimalProfileScreen() {
           </View>
         </View>
 
+        {/* Health Records */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>
+              {language === 'hi' ? 'स्वास्थ्य रिकॉर्ड' : language === 'cg' ? 'स्वास्थ्य रिकॉर्ड' : 'Health Records'}
+            </Text>
+            <TouchableOpacity onPress={() => navigation.navigate('AddHealthRecord' as never, { animalId } as never)}>
+              <Ionicons name="add-circle" size={24} color="#4f46e5" />
+            </TouchableOpacity>
+          </View>
+
+          {loadingRecords ? (
+            <ActivityIndicator color="#4f46e5" />
+          ) : healthRecords.length === 0 ? (
+            <View style={styles.emptyRecords}>
+              <Ionicons name="medical-outline" size={32} color="#d1d5db" />
+              <Text style={styles.emptyRecordsText}>
+                {language === 'hi' ? 'कोई स्वास्थ्य रिकॉर्ड नहीं' : language === 'cg' ? 'कोई स्वास्थ्य रिकॉर्ड नाहीं' : 'No health records yet'}
+              </Text>
+            </View>
+          ) : (
+            healthRecords.slice(0, 3).map((record) => (
+              <View key={record.id} style={styles.recordCard}>
+                <View style={styles.recordHeader}>
+                  <View style={styles.recordTypeBadge}>
+                    <Ionicons
+                      name={
+                        record.record_type === 'vaccination'
+                          ? 'medical'
+                          : record.record_type === 'treatment'
+                          ? 'construct'
+                          : 'document-text'
+                      }
+                      size={16}
+                      color="#4f46e5"
+                    />
+                    <Text style={styles.recordTypeText}>{record.record_type}</Text>
+                  </View>
+                  {record.record_date && (
+                    <Text style={styles.recordDate}>{record.record_date}</Text>
+                  )}
+                </View>
+                <Text style={styles.recordTitle}>{record.title}</Text>
+                {record.veterinarian_name && (
+                  <Text style={styles.recordVet}>
+                    {language === 'hi' ? 'डॉ. ' : language === 'cg' ? 'डॉ. ' : 'Dr. '}{record.veterinarian_name}
+                  </Text>
+                )}
+              </View>
+            ))
+          )}
+
+          {healthRecords.length > 3 && (
+            <TouchableOpacity style={styles.viewAllButton}>
+              <Text style={styles.viewAllButtonText}>
+                {language === 'hi' ? 'सभी देखें' : language === 'cg' ? 'सब्भ देखब' : 'View All'}
+              </Text>
+              <Ionicons name="chevron-forward" size={16} color="#4f46e5" />
+            </TouchableOpacity>
+          )}
+        </View>
+
         {/* Actions */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>
@@ -214,7 +296,7 @@ export default function AnimalProfileScreen() {
           <TouchableOpacity style={styles.actionButton}>
             <Ionicons name="medical-outline" size={20} color="#10b981" />
             <Text style={styles.actionButtonText}>
-              {language === 'hi' ? 'स्वास्थ्य रिकॉर्ड' : language === 'cg' ? 'स्वास्थ्य रिकॉर्ड' : 'Health Records'}
+              {language === 'hi' ? 'स्वास्थ्य रिकॉर्ड जोड़ें' : language === 'cg' ? 'स्वास्थ्य रिकॉर्ड जोड़ब' : 'Add Health Record'}
             </Text>
           </TouchableOpacity>
 
@@ -367,5 +449,74 @@ const styles = StyleSheet.create({
   },
   deleteButtonText: {
     color: '#ef4444',
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  emptyRecords: {
+    alignItems: 'center',
+    paddingVertical: 24,
+  },
+  emptyRecordsText: {
+    fontSize: 14,
+    color: '#9ca3af',
+    marginTop: 8,
+  },
+  recordCard: {
+    backgroundColor: '#f9fafb',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 8,
+  },
+  recordHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  recordTypeBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#eef2ff',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  recordTypeText: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: '#4f46e5',
+    textTransform: 'capitalize',
+  },
+  recordDate: {
+    fontSize: 12,
+    color: '#9ca3af',
+  },
+  recordTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#111827',
+    marginBottom: 4,
+  },
+  recordVet: {
+    fontSize: 12,
+    color: '#6b7280',
+  },
+  viewAllButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    marginTop: 8,
+  },
+  viewAllButtonText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#4f46e5',
+    marginRight: 4,
   },
 });

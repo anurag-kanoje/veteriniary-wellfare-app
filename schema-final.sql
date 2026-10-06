@@ -47,6 +47,30 @@ CREATE TABLE animals (
 CREATE INDEX idx_animals_user_id ON animals(user_id);
 
 -- =========================================
+-- HEALTH RECORDS
+-- =========================================
+
+CREATE TABLE health_records (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  animal_id UUID REFERENCES animals(id) ON DELETE CASCADE,
+  record_type TEXT CHECK (record_type IN ('checkup','vaccination','treatment','surgery','other')),
+  title TEXT NOT NULL,
+  description TEXT,
+  veterinarian_name TEXT,
+  clinic_name TEXT,
+  cost DECIMAL,
+  medications TEXT[],
+  notes TEXT,
+  record_date DATE,
+  next_visit_date DATE,
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE INDEX idx_health_records_animal_id ON health_records(animal_id);
+CREATE INDEX idx_health_records_date ON health_records(record_date);
+
+-- =========================================
 -- RESCUE NGOs
 -- =========================================
 
@@ -251,6 +275,7 @@ CREATE TABLE likes (
 
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE animals ENABLE ROW LEVEL SECURITY;
+ALTER TABLE health_records ENABLE ROW LEVEL SECURITY;
 ALTER TABLE rescue_reports ENABLE ROW LEVEL SECURITY;
 ALTER TABLE tele_consultations ENABLE ROW LEVEL SECURITY;
 
@@ -272,6 +297,15 @@ CREATE POLICY animals_manage
 ON animals
 FOR ALL
 USING (user_id = auth.uid());
+
+CREATE POLICY health_records_manage
+ON health_records
+FOR ALL
+USING (
+  animal_id IN (
+    SELECT id FROM animals WHERE user_id = auth.uid()
+  )
+);
 
 CREATE POLICY rescue_view
 ON rescue_reports
