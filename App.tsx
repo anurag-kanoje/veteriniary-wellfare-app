@@ -25,6 +25,7 @@ import LoginScreen from './src/screens/LoginScreen';
 import RegisterScreen from './src/screens/RegisterScreen';
 import AddEditAnimalScreen from './src/screens/AddEditAnimalScreen';
 import AnimalProfileScreen from './src/screens/AnimalProfileScreen';
+import AddHealthRecordScreen from './src/screens/AddHealthRecordScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -56,6 +57,7 @@ function AnimalsStack() {
       <Stack.Screen name="AnimalsList" component={AnimalsScreen} />
       <Stack.Screen name="AddEditAnimal" component={AddEditAnimalScreen} />
       <Stack.Screen name="AnimalProfile" component={AnimalProfileScreen} />
+      <Stack.Screen name="AddHealthRecord" component={AddHealthRecordScreen} />
     </Stack.Navigator>
   );
 }

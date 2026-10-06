@@ -43,6 +43,24 @@ export type Tables = {
       profile_image: string | null;
     };
   };
+  health_records: {
+    Row: {
+      id: string;
+      animal_id: string;
+      record_type: 'checkup' | 'vaccination' | 'treatment' | 'surgery' | 'other';
+      title: string;
+      description: string | null;
+      veterinarian_name: string | null;
+      clinic_name: string | null;
+      cost: number | null;
+      medications: string[] | null;
+      notes: string | null;
+      record_date: string | null;
+      next_visit_date: string | null;
+      created_at: string;
+      updated_at: string;
+    };
+  };
   rescue_reports: {
     Row: {
       id: string;
