@@ -88,7 +88,7 @@ export class HealthRecordService {
     input: CreateHealthRecordInput
   ): Promise<{ data: HealthRecord | null; error: Error | null }> {
     try {
-      const { data, error } = await supabase
+      const result = await supabase
         .from('health_records')
         .insert({
           animal_id: input.animal_id,
@@ -105,6 +105,8 @@ export class HealthRecordService {
         })
         .select()
         .single();
+
+      const { data, error } = result;
 
       if (error) {
         return { data: null, error: error as Error };
@@ -124,7 +126,7 @@ export class HealthRecordService {
     input: UpdateHealthRecordInput
   ): Promise<{ data: HealthRecord | null; error: Error | null }> {
     try {
-      const { data, error } = await supabase
+      const result = await supabase
         .from('health_records')
         .update({
           title: input.title,
@@ -143,6 +145,8 @@ export class HealthRecordService {
         .select()
         .single();
 
+      const { data, error } = result;
+
       if (error) {
         return { data: null, error: error as Error };
       }
@@ -158,10 +162,12 @@ export class HealthRecordService {
    */
   static async deleteHealthRecord(id: string): Promise<{ error: Error | null }> {
     try {
-      const { error } = await supabase
+      const result = await supabase
         .from('health_records')
         .delete()
         .eq('id', id);
+
+      const { error } = result;
 
       if (error) {
         return { error: error as Error };

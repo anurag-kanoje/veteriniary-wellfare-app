@@ -126,7 +126,7 @@ export default function GaushalaScreen() {
       breed: newAnimal.breed || '',
       gender: newAnimal.gender || 'Female',
       dateOfBirth: newAnimal.dateOfBirth || '',
-      dateOfArrival: newAnimal.dateOfArrival || new Date().toISOString().split('T')[0],
+      dateOfArrival: newAnimal.dateOfArrival || new Date().toISOString().split('T')[0] || '',
       healthStatus: newAnimal.healthStatus || 'good',
       lastVaccination: newAnimal.lastVaccination || '',
       notes: newAnimal.notes || '',
@@ -698,12 +698,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
-  },
-  detailRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
   },
   detailLabel: {
     fontSize: 14,

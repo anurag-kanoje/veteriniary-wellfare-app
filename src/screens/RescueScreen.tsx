@@ -106,7 +106,7 @@ export default function RescueScreen() {
       quality: 0.8,
     });
 
-    if (!result.canceled && result.assets && result.assets.length > 0) {
+    if (!result.canceled && result.assets && result.assets.length > 0 && result.assets[0]) {
       setImages([...images, result.assets[0].uri]);
     }
   };

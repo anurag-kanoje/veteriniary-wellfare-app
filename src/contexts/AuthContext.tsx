@@ -48,17 +48,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const initializeAuth = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        const session = await supabase.auth.session();
+        
         if (session) {
           setUser(session.user);
           setSession(session);
           
           // Fetch user profile from database
-          const { data: profileData } = await supabase
+          const profileResult = await supabase
             .from('users')
             .select('*')
             .eq('id', session.user.id)
             .single();
+          
+          const { data: profileData } = profileResult;
           
           if (profileData) {
             setProfile(profileData as UserProfile);
@@ -76,25 +79,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signIn = useCallback(async (email: string, password: string) => {
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const result = await supabase.auth.signIn({
         email,
         password,
       });
+
+      const { data, error } = result;
 
       if (error) {
         return { error };
       }
 
-      if (data.user && data.session) {
-        setUser(data.user);
-        setSession(data.session);
+      const user = data?.user;
+      const session = data?.session;
+
+      if (user && session) {
+        setUser(user);
+        setSession(session);
         
         // Fetch user profile
-        const { data: profileData } = await supabase
+        const profileResult = await supabase
           .from('users')
           .select('*')
-          .eq('id', data.user.id)
+          .eq('id', user.id)
           .single();
+        
+        const { data: profileData } = profileResult;
         
         if (profileData) {
           setProfile(profileData as UserProfile);
@@ -113,38 +123,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     userData: { full_name: string; role: UserRole; phone?: string }
   ) => {
     try {
-      const { data, error } = await supabase.auth.signUp({
+      const result = await supabase.auth.signUp({
         email,
         password,
-        options: {
-          data: {
-            full_name: userData.full_name,
-            role: userData.role,
-            phone: userData.phone,
-          },
-        },
       });
+
+      const { data, error } = result;
 
       if (error) {
         return { error };
       }
 
-      if (data.user && data.session) {
-        setUser(data.user);
-        setSession(data.session);
+      const user = data?.user;
+      const session = data?.session;
+
+      if (user && session) {
+        setUser(user);
+        setSession(session);
         
         // Create user profile in database
-        const { data: profileData, error: profileError } = await supabase
+        const profileResult = await supabase
           .from('users')
           .insert({
-            id: data.user.id,
-            email: data.user.email,
+            id: user.id,
+            email: user.email,
             full_name: userData.full_name,
             role: userData.role,
             phone: userData.phone || null,
           })
           .select()
           .single();
+        
+        const { data: profileData, error: profileError } = profileResult;
         
         if (profileError) {
           console.error('Profile creation error:', profileError);
@@ -179,22 +189,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { error: new Error('No user logged in') };
       }
 
-      const { data, error } = await supabase
+      const result = await supabase
         .from('users')
         .update({
           ...updates,
           updated_at: new Date().toISOString(),
         })
         .eq('id', user.id)
-        .select()
-        .single();
+        .select();
+
+      const { data, error } = result;
 
       if (error) {
         return { error };
       }
 
-      if (data) {
-        setProfile(data as UserProfile);
+      if (data && data.length > 0) {
+        setProfile(data[0] as UserProfile);
       }
 
       return { error: null };
@@ -205,17 +216,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const refreshSession = useCallback(async () => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const session = await supabase.auth.session();
       if (session) {
         setSession(session);
         setUser(session.user);
         
         // Fetch user profile
-        const { data: profileData } = await supabase
+        const profileResult = await supabase
           .from('users')
           .select('*')
           .eq('id', session.user.id)
           .single();
+        
+        const { data: profileData } = profileResult;
         
         if (profileData) {
           setProfile(profileData as UserProfile);

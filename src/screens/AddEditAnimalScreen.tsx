@@ -9,7 +9,8 @@ import {
   Alert,
   ActivityIndicator,
 } from 'react-native';
-import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -40,8 +41,9 @@ const GENDER_OPTIONS = [
 
 export default function AddEditAnimalScreen() {
   const navigation = useNavigation();
-  const route = useRoute<RouteProp<RouteParams, 'AddEditAnimal'>>();
-  const { animalId } = route.params || {};
+  const route = useRoute();
+  const params = route.params as RouteParams['AddEditAnimal'] || {};
+  const animalId = params.animalId;
   const { language } = useLanguage();
   const [isEditing, setIsEditing] = useState(!!animalId);
   const [loading, setLoading] = useState(false);
@@ -109,7 +111,7 @@ export default function AddEditAnimalScreen() {
 
     setSaving(true);
     try {
-      const input: CreateAnimalInput | UpdateAnimalInput = {
+      const input: CreateAnimalInput = {
         name: formData.name.trim(),
         species: formData.species,
         breed: formData.breed.trim() || undefined,

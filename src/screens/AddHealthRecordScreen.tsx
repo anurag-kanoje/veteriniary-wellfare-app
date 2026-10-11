@@ -9,7 +9,8 @@ import {
   Alert,
   ActivityIndicator,
 } from 'react-native';
-import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { useLanguage } from '../contexts/LanguageContext';
 import { HealthRecordService, CreateHealthRecordInput } from '../services/HealthRecordService';
@@ -30,8 +31,9 @@ const RECORD_TYPES = [
 
 export default function AddHealthRecordScreen() {
   const navigation = useNavigation();
-  const route = useRoute<RouteProp<RouteParams, 'AddHealthRecord'>>();
-  const { animalId } = route.params;
+  const route = useRoute();
+  const params = route.params as RouteParams['AddHealthRecord'];
+  const animalId = params.animalId;
   const { language } = useLanguage();
   const [saving, setSaving] = useState(false);
 

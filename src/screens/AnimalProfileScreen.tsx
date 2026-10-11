@@ -8,7 +8,8 @@ import {
   Alert,
   ActivityIndicator,
 } from 'react-native';
-import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -23,8 +24,9 @@ type RouteParams = {
 
 export default function AnimalProfileScreen() {
   const navigation = useNavigation();
-  const route = useRoute<RouteProp<RouteParams, 'AnimalProfile'>>();
-  const { animalId } = route.params;
+  const route = useRoute();
+  const params = route.params as RouteParams['AnimalProfile'];
+  const animalId = params.animalId;
   const { language } = useLanguage();
   const [animal, setAnimal] = useState<Animal | null>(null);
   const [healthRecords, setHealthRecords] = useState<HealthRecord[]>([]);

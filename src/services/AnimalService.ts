@@ -73,7 +73,7 @@ export class AnimalService {
     input: CreateAnimalInput
   ): Promise<{ data: Animal | null; error: Error | null }> {
     try {
-      const { data, error } = await supabase
+      const result = await supabase
         .from('animals')
         .insert({
           name: input.name,
@@ -85,6 +85,8 @@ export class AnimalService {
         })
         .select()
         .single();
+
+      const { data, error } = result;
 
       if (error) {
         return { data: null, error: error as Error };
@@ -104,7 +106,7 @@ export class AnimalService {
     input: UpdateAnimalInput
   ): Promise<{ data: Animal | null; error: Error | null }> {
     try {
-      const { data, error } = await supabase
+      const result = await supabase
         .from('animals')
         .update({
           name: input.name,
@@ -118,6 +120,8 @@ export class AnimalService {
         .eq('id', id)
         .select()
         .single();
+
+      const { data, error } = result;
 
       if (error) {
         return { data: null, error: error as Error };
@@ -134,10 +138,12 @@ export class AnimalService {
    */
   static async deleteAnimal(id: string): Promise<{ error: Error | null }> {
     try {
-      const { error } = await supabase
+      const result = await supabase
         .from('animals')
         .delete()
         .eq('id', id);
+
+      const { error } = result;
 
       if (error) {
         return { error: error as Error };

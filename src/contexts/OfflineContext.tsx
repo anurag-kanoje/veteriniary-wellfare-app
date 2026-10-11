@@ -32,8 +32,7 @@ export function OfflineProvider({ children }: { children: ReactNode }) {
         // Simple network check
         const response = await fetch('https://www.google.com', { 
           method: 'HEAD',
-          cache: 'no-cache',
-          timeout: 5000
+          cache: 'no-cache'
         });
         setIsOnline(true);
       } catch (error) {
