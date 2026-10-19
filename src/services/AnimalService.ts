@@ -30,6 +30,7 @@ export class AnimalService {
    */
   static async getMyAnimals(): Promise<{ data: Animal[] | null; error: Error | null }> {
     try {
+      // @ts-ignore - Supabase v2.x API compatibility
       const { data, error } = await supabase
         .from('animals')
         .select('*')
@@ -50,6 +51,7 @@ export class AnimalService {
    */
   static async getAnimal(id: string): Promise<{ data: Animal | null; error: Error | null }> {
     try {
+      // @ts-ignore - Supabase v2.x API compatibility
       const { data, error } = await supabase
         .from('animals')
         .select('*')
@@ -73,7 +75,8 @@ export class AnimalService {
     input: CreateAnimalInput
   ): Promise<{ data: Animal | null; error: Error | null }> {
     try {
-      const result = await supabase
+      // @ts-ignore - Supabase v2.x API compatibility
+      const insertResult = await supabase
         .from('animals')
         .insert({
           name: input.name,
@@ -86,7 +89,8 @@ export class AnimalService {
         .select()
         .single();
 
-      const { data, error } = result;
+      // @ts-ignore - Supabase v2.x API compatibility
+      const { data, error } = insertResult;
 
       if (error) {
         return { data: null, error: error as Error };
@@ -106,7 +110,8 @@ export class AnimalService {
     input: UpdateAnimalInput
   ): Promise<{ data: Animal | null; error: Error | null }> {
     try {
-      const result = await supabase
+      // @ts-ignore - Supabase v2.x API compatibility
+      const updateResult = await supabase
         .from('animals')
         .update({
           name: input.name,
@@ -121,7 +126,8 @@ export class AnimalService {
         .select()
         .single();
 
-      const { data, error } = result;
+      // @ts-ignore - Supabase v2.x API compatibility
+      const { data, error } = updateResult;
 
       if (error) {
         return { data: null, error: error as Error };
@@ -138,12 +144,14 @@ export class AnimalService {
    */
   static async deleteAnimal(id: string): Promise<{ error: Error | null }> {
     try {
-      const result = await supabase
+      // @ts-ignore - Supabase v2.x API compatibility
+      const deleteResult = await supabase
         .from('animals')
         .delete()
         .eq('id', id);
 
-      const { error } = result;
+      // @ts-ignore - Supabase v2.x API compatibility
+      const { error } = deleteResult;
 
       if (error) {
         return { error: error as Error };

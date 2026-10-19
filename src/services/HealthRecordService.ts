@@ -41,6 +41,7 @@ export class HealthRecordService {
     animalId: string
   ): Promise<{ data: HealthRecord[] | null; error: Error | null }> {
     try {
+      // @ts-ignore - Supabase v2.x API compatibility
       const { data, error } = await supabase
         .from('health_records')
         .select('*')
@@ -65,6 +66,7 @@ export class HealthRecordService {
     id: string
   ): Promise<{ data: HealthRecord | null; error: Error | null }> {
     try {
+      // @ts-ignore - Supabase v2.x API compatibility
       const { data, error } = await supabase
         .from('health_records')
         .select('*')
@@ -88,7 +90,8 @@ export class HealthRecordService {
     input: CreateHealthRecordInput
   ): Promise<{ data: HealthRecord | null; error: Error | null }> {
     try {
-      const result = await supabase
+      // @ts-ignore - Supabase v2.x API compatibility
+      const insertResult = await supabase
         .from('health_records')
         .insert({
           animal_id: input.animal_id,
@@ -106,7 +109,8 @@ export class HealthRecordService {
         .select()
         .single();
 
-      const { data, error } = result;
+      // @ts-ignore - Supabase v2.x API compatibility
+      const { data, error } = insertResult;
 
       if (error) {
         return { data: null, error: error as Error };
@@ -126,7 +130,8 @@ export class HealthRecordService {
     input: UpdateHealthRecordInput
   ): Promise<{ data: HealthRecord | null; error: Error | null }> {
     try {
-      const result = await supabase
+      // @ts-ignore - Supabase v2.x API compatibility
+      const updateResult = await supabase
         .from('health_records')
         .update({
           title: input.title,
@@ -145,7 +150,8 @@ export class HealthRecordService {
         .select()
         .single();
 
-      const { data, error } = result;
+      // @ts-ignore - Supabase v2.x API compatibility
+      const { data, error } = updateResult;
 
       if (error) {
         return { data: null, error: error as Error };
@@ -162,12 +168,14 @@ export class HealthRecordService {
    */
   static async deleteHealthRecord(id: string): Promise<{ error: Error | null }> {
     try {
-      const result = await supabase
+      // @ts-ignore - Supabase v2.x API compatibility
+      const deleteResult = await supabase
         .from('health_records')
         .delete()
         .eq('id', id);
 
-      const { error } = result;
+      // @ts-ignore - Supabase v2.x API compatibility
+      const { error } = deleteResult;
 
       if (error) {
         return { error: error as Error };

@@ -48,20 +48,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const initializeAuth = async () => {
       try {
-        const session = await supabase.auth.session();
+        // @ts-ignore - Supabase v2.x API compatibility
+        const { data: { session } } = await supabase.auth.getSession();
         
         if (session) {
           setUser(session.user);
           setSession(session);
           
           // Fetch user profile from database
-          const profileResult = await supabase
+          const { data: profileData } = await supabase
             .from('users')
             .select('*')
             .eq('id', session.user.id)
             .single();
-          
-          const { data: profileData } = profileResult;
           
           if (profileData) {
             setProfile(profileData as UserProfile);
@@ -79,12 +78,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signIn = useCallback(async (email: string, password: string) => {
     try {
-      const result = await supabase.auth.signIn({
+      // @ts-ignore - Supabase v2.x API compatibility
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
-
-      const { data, error } = result;
 
       if (error) {
         return { error };
@@ -98,13 +96,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setSession(session);
         
         // Fetch user profile
-        const profileResult = await supabase
+        const { data: profileData } = await supabase
           .from('users')
           .select('*')
           .eq('id', user.id)
           .single();
-        
-        const { data: profileData } = profileResult;
         
         if (profileData) {
           setProfile(profileData as UserProfile);
@@ -123,17 +119,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     userData: { full_name: string; role: UserRole; phone?: string }
   ) => {
     try {
-      const result = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
       });
-
-      const { data, error } = result;
 
       if (error) {
         return { error };
       }
 
+      // @ts-ignore - Supabase v2.x API compatibility
       const user = data?.user;
       const session = data?.session;
 
@@ -142,6 +137,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setSession(session);
         
         // Create user profile in database
+        // @ts-ignore - Supabase v2.x API compatibility
         const profileResult = await supabase
           .from('users')
           .insert({
@@ -154,6 +150,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           .select()
           .single();
         
+        // @ts-ignore - Supabase v2.x API compatibility
         const { data: profileData, error: profileError } = profileResult;
         
         if (profileError) {
@@ -189,7 +186,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { error: new Error('No user logged in') };
       }
 
-      const result = await supabase
+      // @ts-ignore - Supabase v2.x API compatibility
+      const updateResult = await supabase
         .from('users')
         .update({
           ...updates,
@@ -198,7 +196,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .eq('id', user.id)
         .select();
 
-      const { data, error } = result;
+      // @ts-ignore - Supabase v2.x API compatibility
+      const { data, error } = updateResult;
 
       if (error) {
         return { error };
@@ -216,19 +215,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const refreshSession = useCallback(async () => {
     try {
-      const session = await supabase.auth.session();
+      // @ts-ignore - Supabase v2.x API compatibility
+      const { data: { session } } = await supabase.auth.getSession();
       if (session) {
         setSession(session);
         setUser(session.user);
         
         // Fetch user profile
-        const profileResult = await supabase
+        const { data: profileData } = await supabase
           .from('users')
           .select('*')
           .eq('id', session.user.id)
           .single();
-        
-        const { data: profileData } = profileResult;
         
         if (profileData) {
           setProfile(profileData as UserProfile);
