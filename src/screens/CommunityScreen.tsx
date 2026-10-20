@@ -1,252 +1,159 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image, TextInput, RefreshControl } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput, ActivityIndicator, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
+import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
-
-type Post = {
-  id: string;
-  user: {
-    id: string;
-    name: string;
-    avatar: any;
-    role: 'Vet' | 'Pet Owner' | 'Admin';
-  };
-  content: string;
-  image?: any;
-  likes: number;
-  comments: number;
-  timeAgo: string;
-  isLiked: boolean;
-  isFollowing: boolean;
-};
-
-type Story = {
-  id: string;
-  user: {
-    id: string;
-    name: string;
-    avatar: any;
-  };
-  hasUnseen: boolean;
-};
+import { CommunityService, Post } from '../services/CommunityService';
 
 export default function CommunityScreen() {
   const navigation = useNavigation();
+  const { user } = useAuth();
   const { language } = useLanguage();
-  const [refreshing, setRefreshing] = useState(false);
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [newPost, setNewPost] = useState('');
-  const [posts, setPosts] = useState<Post[]>([
-    {
-      id: '1',
-      user: {
-        id: 'user1',
-        name: language === 'hi' ? 'डॉ. राजेश शर्मा' : language === 'cg' ? 'डॉ. राजेश शर्मा' : 'Dr. Rajesh Sharma',
-        avatar: require('../../assets/avatar1.jpg'),
-        role: 'Vet',
-      },
-      content: language === 'hi' 
-        ? 'आज FMD टीकाकरण अभियान में 50 गायों का टीका किया। सभी किसान समय पर टीका लगवाएं। 🐄' 
-        : language === 'cg' 
-        ? 'आज एफएमडी टीका अभियान में 50 गाय के टीका करे। सब किसान समय पर टीका लगवाब। 🐄' 
-        : 'Vaccinated 50 cows in today\'s FMD campaign. All farmers should get their animals vaccinated on time. �',
-      image: require('../../assets/post1.jpg'),
-      likes: 45,
-      comments: 12,
-      timeAgo: '2h ago',
-      isLiked: false,
-      isFollowing: true,
-    },
-    {
-      id: '2',
-      user: {
-        id: 'user2',
-        name: language === 'hi' ? 'रामकुमार किसान' : language === 'cg' ? 'रामकुमार किसान' : 'Ramkumar Farmer',
-        avatar: require('../../assets/avatar2.jpg'),
-        role: 'Pet Owner',
-      },
-      content: language === 'hi' 
-        ? 'मेरी बकरी को खांसी हो रही है। कोई घरेलू उपाय बताएं? 🐐' 
-        : language === 'cg' 
-        ? 'मोर बकरी ल खांसी होवत हे। कोई घरेलू उपाय बताब? 🐐' 
-        : 'My goat has been coughing. Any home remedies? 🐐',
-      likes: 28,
-      comments: 23,
-      timeAgo: '5h ago',
-      isLiked: true,
-      isFollowing: false,
-    },
-    {
-      id: '3',
-      user: {
-        id: 'user3',
-        name: language === 'hi' ? 'गौशाला प्रबंधक' : language === 'cg' ? 'गौशाला प्रबंधक' : 'Gaushala Manager',
-        avatar: require('../../assets/avatar3.jpg'),
-        role: 'Admin',
-      },
-      content: language === 'hi' 
-        ? 'गौशाला में 5 नई गायें आई हैं। जो कोई बैल चाहिए, संपर्क करें। 🐂' 
-        : language === 'cg' 
-        ? 'गौशाला में 5 नवी गाय आई हे। जे कोई सांड चाही, संपर्क करब। 🐂' 
-        : '5 new cows arrived at the gaushala. Contact if anyone needs a bull. 🐂',
-      likes: 34,
-      comments: 8,
-      timeAgo: '1d ago',
-      isLiked: false,
-      isFollowing: true,
-    },
-  ]);
+  const [creatingPost, setCreatingPost] = useState(false);
 
-  const stories: Story[] = [
-    { id: 's1', user: { id: 'user3', name: language === 'hi' ? 'सुरेंद्र' : language === 'cg' ? 'सुरेंद्र' : 'Surendra', avatar: require('../../assets/avatar3.jpg') }, hasUnseen: true },
-    { id: 's2', user: { id: 'user4', name: language === 'hi' ? 'मीना' : language === 'cg' ? 'मीना' : 'Meena', avatar: require('../../assets/avatar4.jpg') }, hasUnseen: true },
-    { id: 's3', user: { id: 'user5', name: language === 'hi' ? 'डॉ. प्रकाश' : language === 'cg' ? 'डॉ. प्रकाश' : 'Dr. Prakash', avatar: require('../../assets/avatar5.jpg') }, hasUnseen: false },
-    { id: 's4', user: { id: 'user6', name: language === 'hi' ? 'लक्ष्मी' : language === 'cg' ? 'लक्ष्मी' : 'Lakshmi', avatar: require('../../assets/avatar6.jpg') }, hasUnseen: true },
-  ];
+  useEffect(() => {
+    loadPosts();
+  }, []);
 
-  const handleLike = (postId: string) => {
-    setPosts(posts.map(post => {
-      if (post.id === postId) {
-        return {
-          ...post,
-          isLiked: !post.isLiked,
-          likes: post.isLiked ? post.likes - 1 : post.likes + 1
-        };
+  const loadPosts = async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const result = await CommunityService.getAllPosts();
+      if (result.error) {
+        setError(result.error.message);
+      } else {
+        setPosts(result.data || []);
       }
-      return post;
-    }));
+    } catch (err) {
+      setError('Failed to load posts');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleFollow = (userId: string) => {
-    setPosts(posts.map(post => {
-      if (post.user.id === userId) {
-        return {
-          ...post,
-          isFollowing: !post.isFollowing
-        };
+  const handleCreatePost = async () => {
+    if (!newPost.trim() || !user) return;
+
+    setCreatingPost(true);
+    try {
+      const result = await CommunityService.createPost({
+        user_id: user.id,
+        content: newPost.trim(),
+        category: 'general',
+      });
+
+      if (result.error) {
+        Alert.alert('Error', result.error.message);
+      } else {
+        setNewPost('');
+        await loadPosts();
       }
-      return post;
-    }));
+    } catch (err) {
+      Alert.alert('Error', 'Failed to create post');
+    } finally {
+      setCreatingPost(false);
+    }
   };
 
-  const handleRefresh = () => {
-    setRefreshing(true);
-    // Simulate network request
-    setTimeout(() => {
-      setRefreshing(false);
-    }, 1000);
+  const handleLike = async (postId: string) => {
+    if (!user) return;
+
+    try {
+      const hasLiked = await CommunityService.hasUserLikedPost(postId, user.id);
+      
+      if (hasLiked.data) {
+        await CommunityService.unlikePost(postId, user.id);
+      } else {
+        await CommunityService.likePost(postId, user.id);
+      }
+      
+      // Reload posts to get updated like count
+      await loadPosts();
+    } catch (err) {
+      Alert.alert('Error', 'Failed to update like');
+    }
   };
 
-  const handleCreatePost = () => {
-    if (!newPost.trim()) return;
-    
-    const newPostObj: Post = {
-      id: Date.now().toString(),
-      user: {
-        id: 'currentUser',
-        name: language === 'hi' ? 'आप' : language === 'cg' ? 'तोहर' : 'You',
-        avatar: require('../../assets/avatar0.jpg'),
-        role: 'Pet Owner',
-      },
-      content: newPost,
-      likes: 0,
-      comments: 0,
-      timeAgo: language === 'hi' ? 'अभी' : language === 'cg' ? 'अभी' : 'Just now',
-      isLiked: false,
-      isFollowing: false,
-    };
-    
-    setPosts([newPostObj, ...posts]);
-    setNewPost('');
-  };
-
-  const renderStory = ({ item }: { item: Story }) => (
-    <TouchableOpacity 
-      style={styles.storyContainer}
-      onPress={() => navigation.navigate('Story', { storyId: item.id })}
-    >
-      <View style={[
-        styles.story,
-        item.hasUnseen && styles.unseenStory
-      ]}>
-        <Image source={item.user.avatar} style={styles.storyAvatar} />
-      </View>
-      <Text style={styles.storyName} numberOfLines={1}>{item.user.name}</Text>
-    </TouchableOpacity>
+  const renderEmptyState = () => (
+    <View style={styles.emptyContainer}>
+      <Ionicons name="chatbubbles-outline" size={64} color="#9ca3af" />
+      <Text style={styles.emptyText}>
+        {language === 'hi' ? 'कोई पोस्ट नहीं' : language === 'cg' ? 'कोई पोस्ट नहीं' : 'No posts yet'}
+      </Text>
+      <Text style={styles.emptySubtext}>
+        {language === 'hi' ? 'पहला पोस्ट बनाएं' : language === 'cg' ? 'पहिला पोस्ट बनाब' : 'Be the first to post'}
+      </Text>
+    </View>
   );
 
   const renderPost = ({ item }: { item: Post }) => (
     <View style={styles.postCard}>
       <View style={styles.postHeader}>
-        <View style={styles.postUser}>
-          <Image source={item.user.avatar} style={styles.avatar} />
-          <View style={styles.userInfo}>
-            <Text style={styles.userName}>{item.user.name}</Text>
-            <View style={styles.postMeta}>
-              <Text style={styles.userRole}>{item.user.role}</Text>
-              <Text style={styles.dot}>•</Text>
-              <Text style={styles.timeAgo}>{item.timeAgo}</Text>
+        <View style={styles.postMeta}>
+          <Text style={styles.postDate}>
+            {new Date(item.created_at).toLocaleDateString()}
+          </Text>
+          {item.category && (
+            <View style={styles.categoryBadge}>
+              <Text style={styles.categoryText}>{item.category}</Text>
             </View>
-          </View>
-        </View>
-        <View style={styles.postActions}>
-          <TouchableOpacity 
-            style={styles.followButton}
-            onPress={() => handleFollow(item.user.id)}
-          >
-            <Text style={[
-              styles.followButtonText,
-              item.isFollowing && styles.followingButtonText
-            ]}>
-              {item.isFollowing ? 'Following' : 'Follow'}
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity>
-            <Ionicons name="ellipsis-horizontal" size={20} color="#6b7280" />
-          </TouchableOpacity>
+          )}
         </View>
       </View>
-      
       <Text style={styles.postContent}>{item.content}</Text>
-      
-      {item.image && (
-        <Image source={item.image} style={styles.postImage} resizeMode="cover" />
-      )}
-      
-      <View style={styles.postFooter}>
-        <View style={styles.likeCommentContainer}>
-          <TouchableOpacity 
-            style={styles.actionButton}
-            onPress={() => handleLike(item.id)}
-          >
-            <Ionicons 
-              name={item.isLiked ? 'heart' : 'heart-outline'} 
-              size={20} 
-              color={item.isLiked ? '#ef4444' : '#6b7280'} 
-            />
-            <Text style={[
-              styles.actionText,
-              item.isLiked && styles.likedText
-            ]}>
-              {item.likes}
-            </Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity 
-            style={styles.actionButton}
-            onPress={() => navigation.navigate('PostComments', { postId: item.id })}
-          >
-            <Ionicons name="chatbubble-outline" size={20} color="#6b7280" />
-            <Text style={styles.actionText}>{item.comments}</Text>
-          </TouchableOpacity>
+      {item.image_url && (
+        <View style={styles.postImageContainer}>
+          <Text style={styles.imagePlaceholderText}>Image</Text>
         </View>
-        
-        <TouchableOpacity style={styles.shareButton}>
-          <Ionicons name="share-social-outline" size={20} color="#6b7280" />
+      )}
+      <View style={styles.postActions}>
+        <TouchableOpacity style={styles.actionButton} onPress={() => handleLike(item.id)}>
+          <Ionicons name="heart-outline" size={20} color="#6b7280" />
+          <Text style={styles.actionText}>Like</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.actionButton} onPress={() => Alert.alert('Info', 'Comments feature coming soon')}>
+          <Ionicons name="chatbubble-outline" size={20} color="#6b7280" />
+          <Text style={styles.actionText}>Comment</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.actionButton} onPress={() => Alert.alert('Info', 'Share feature coming soon')}>
+          <Ionicons name="share-outline" size={20} color="#6b7280" />
+          <Text style={styles.actionText}>Share</Text>
         </TouchableOpacity>
       </View>
     </View>
   );
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#4f46e5" />
+        <Text style={styles.loadingText}>
+          {language === 'hi' ? 'लोड हो रहा है...' : language === 'cg' ? 'लोड होरहा है...' : 'Loading...'}
+        </Text>
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.errorContainer}>
+        <Ionicons name="alert-circle" size={48} color="#ef4444" />
+        <Text style={styles.errorText}>{error}</Text>
+        <TouchableOpacity style={styles.retryButton} onPress={loadPosts}>
+          <Text style={styles.retryButtonText}>
+            {language === 'hi' ? 'पुनः कोशिश करें' : language === 'cg' ? 'फेर कोशिश करें' : 'Retry'}
+          </Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -254,53 +161,50 @@ export default function CommunityScreen() {
         <Text style={styles.title}>
           {language === 'hi' ? 'समुदाय' : language === 'cg' ? 'समाज' : 'Community'}
         </Text>
-        <TouchableOpacity>
-          <Ionicons name="notifications-outline" size={24} color="#111827" />
-        </TouchableOpacity>
       </View>
-      
+
       <View style={styles.createPostContainer}>
-        <Image 
-          source={require('../../assets/avatar0.jpg')} 
-          style={styles.currentUserAvatar} 
-        />
         <TextInput
-          style={styles.postInput}
+          style={styles.createPostInput}
           placeholder={
             language === 'hi' 
-              ? 'अपने मन की बात शेयर करें...' 
+              ? 'क्या साझा है?' 
               : language === 'cg' 
-              ? 'मन के बात शेयर करब...' 
-              : "What's on your mind?"
+              ? 'के सांगा है?' 
+              : 'What\'s on your mind?'
           }
-          placeholderTextColor="#9ca3af"
           value={newPost}
           onChangeText={setNewPost}
-          onSubmitEditing={handleCreatePost}
+          multiline
         />
-        <TouchableOpacity 
-          style={styles.postButton}
+        <TouchableOpacity
+          style={[styles.createPostButton, !newPost.trim() && styles.disabledButton]}
           onPress={handleCreatePost}
-          disabled={!newPost.trim()}
+          disabled={!newPost.trim() || creatingPost}
         >
-          <Ionicons name="send" size={20} color="#fff" />
+          {creatingPost ? (
+            <ActivityIndicator size="small" color="#fff" />
+          ) : (
+            <>
+              <Ionicons name="send" size={20} color="#fff" />
+              <Text style={styles.createPostButtonText}>
+                {language === 'hi' ? 'पोस्ट' : language === 'cg' ? 'पोस्ट' : 'Post'}
+              </Text>
+            </>
+          )}
         </TouchableOpacity>
       </View>
-      
+
       <FlatList
         data={posts}
         renderItem={renderPost}
-        keyExtractor={item => item.id}
-        contentContainerStyle={styles.postsList}
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={handleRefresh}
-            colors={['#4f46e5']}
-            tintColor="#4f46e5"
-          />
-        }
+        keyExtractor={(item) => item.id}
+        contentContainerStyle={styles.listContent}
+        ListEmptyComponent={renderEmptyState}
+        refreshControl={{
+          refreshing: false,
+          onRefresh: loadPosts,
+        }}
       />
     </View>
   );
@@ -312,201 +216,169 @@ const styles = StyleSheet.create({
     backgroundColor: '#f9fafb',
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
     padding: 16,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#f3f4f6',
+    paddingBottom: 8,
   },
   title: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: '700',
     color: '#111827',
   },
-  storiesContainer: {
-    paddingVertical: 12,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#f3f4f6',
-  },
-  storiesList: {
-    paddingHorizontal: 12,
-  },
-  storyContainer: {
-    alignItems: 'center',
-    marginRight: 16,
-    width: 70,
-  },
-  story: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    borderWidth: 2,
-    borderColor: '#e5e7eb',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 4,
-  },
-  unseenStory: {
-    borderColor: '#4f46e5',
-  },
-  storyAvatar: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    borderWidth: 2,
-    borderColor: '#fff',
-  },
-  storyName: {
-    fontSize: 12,
-    color: '#4b5563',
-    textAlign: 'center',
-    width: '100%',
-  },
   createPostContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#f3f4f6',
+    backgroundColor: '#ffffff',
+    margin: 16,
+    padding: 12,
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 2,
   },
-  currentUserAvatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    marginRight: 12,
-  },
-  postInput: {
-    flex: 1,
-    height: 40,
-    backgroundColor: '#f3f4f6',
-    borderRadius: 20,
-    paddingHorizontal: 16,
-    marginRight: 12,
+  createPostInput: {
     fontSize: 14,
     color: '#111827',
+    marginBottom: 8,
+    minHeight: 60,
   },
-  postButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#4f46e5',
-    justifyContent: 'center',
+  createPostButton: {
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#4f46e5',
+    paddingVertical: 10,
+    borderRadius: 8,
   },
-  postsList: {
-    paddingBottom: 24,
+  disabledButton: {
+    backgroundColor: '#9ca3af',
+  },
+  createPostButtonText: {
+    color: '#ffffff',
+    fontWeight: '600',
+    marginLeft: 8,
+  },
+  listContent: {
+    padding: 16,
+    paddingTop: 0,
   },
   postCard: {
-    backgroundColor: '#fff',
-    marginBottom: 12,
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
     padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f3f4f6',
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 2,
   },
   postHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 12,
-  },
-  postUser: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    marginRight: 12,
-  },
-  userInfo: {
-    justifyContent: 'center',
-  },
-  userName: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#111827',
-    marginBottom: 2,
+    marginBottom: 8,
   },
   postMeta: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  userRole: {
-    fontSize: 12,
-    color: '#4f46e5',
-    fontWeight: '500',
-  },
-  dot: {
+  postDate: {
     fontSize: 12,
     color: '#9ca3af',
-    marginHorizontal: 4,
   },
-  timeAgo: {
-    fontSize: 12,
+  categoryBadge: {
+    backgroundColor: '#e0e7ff',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 4,
+    marginLeft: 8,
+  },
+  categoryText: {
+    fontSize: 10,
+    fontWeight: '500',
+    color: '#4f46e5',
+    textTransform: 'capitalize',
+  },
+  postContent: {
+    fontSize: 14,
+    color: '#111827',
+    marginBottom: 12,
+    lineHeight: 20,
+  },
+  postImageContainer: {
+    height: 200,
+    backgroundColor: '#f3f4f6',
+    borderRadius: 8,
+    marginBottom: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  imagePlaceholderText: {
+    fontSize: 14,
     color: '#9ca3af',
   },
   postActions: {
     flexDirection: 'row',
-    alignItems: 'center',
-  },
-  followButton: {
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#d1d5db',
-    marginRight: 8,
-  },
-  followButtonText: {
-    fontSize: 12,
-    fontWeight: '500',
-    color: '#4b5563',
-  },
-  followingButtonText: {
-    color: '#4f46e5',
-  },
-  postContent: {
-    fontSize: 15,
-    color: '#111827',
-    lineHeight: 22,
-    marginBottom: 12,
-  },
-  postImage: {
-    width: '100%',
-    height: 200,
-    borderRadius: 12,
-    marginBottom: 12,
-  },
-  postFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingTop: 12,
     borderTopWidth: 1,
     borderTopColor: '#f3f4f6',
-  },
-  likeCommentContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    paddingTop: 12,
   },
   actionButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginRight: 20,
+    marginRight: 24,
   },
   actionText: {
-    fontSize: 13,
+    fontSize: 14,
     color: '#6b7280',
     marginLeft: 4,
   },
-  likedText: {
-    color: '#ef4444',
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 32,
   },
-  shareButton: {
-    padding: 4,
+  emptyText: {
+    fontSize: 16,
+    color: '#6b7280',
+    marginTop: 16,
+  },
+  emptySubtext: {
+    fontSize: 14,
+    color: '#9ca3af',
+    marginTop: 4,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f9fafb',
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 14,
+    color: '#6b7280',
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f9fafb',
+    padding: 32,
+  },
+  errorText: {
+    marginTop: 12,
+    fontSize: 14,
+    color: '#ef4444',
+    textAlign: 'center',
+  },
+  retryButton: {
+    marginTop: 16,
+    backgroundColor: '#4f46e5',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: '#ffffff',
+    fontWeight: '600',
   },
 });

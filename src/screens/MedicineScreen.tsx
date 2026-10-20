@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -6,287 +6,315 @@ import {
   ScrollView,
   TouchableOpacity,
   TextInput,
+  ActivityIndicator,
   Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useLanguage } from '../contexts/LanguageContext';
-
-interface MedicineStore {
-  id: string;
-  name: string;
-  nameLocal: string;
-  type: 'pharmacy' | 'veterinary' | 'ngo' | 'gaushala';
-  location: string;
-  phone: string;
-  medicines: string[];
-  rating: number;
-  verified: boolean;
-  distance?: string;
-}
-
-const MEDICINE_STORES: MedicineStore[] = [
-  {
-    id: '1',
-    name: 'City Veterinary Pharmacy',
-    nameLocal: 'शहर पशु चिकित्सा फार्मेसी',
-    type: 'veterinary',
-    location: 'Raipur, Near Railway Station',
-    phone: '+91 771 1234567',
-    medicines: ['Antibiotics', 'Vaccines', 'Supplements', 'First Aid'],
-    rating: 4.5,
-    verified: true,
-    distance: '2.5 km',
-  },
-  {
-    id: '2',
-    name: 'General Medical Store',
-    nameLocal: 'सामान्य मेडिकल स्टोर',
-    type: 'pharmacy',
-    location: 'Bilaspur, Main Market',
-    phone: '+91 771 2345678',
-    medicines: ['Basic Medicines', 'Pain Killers', 'Antiseptics'],
-    rating: 4.2,
-    verified: true,
-    distance: '5.0 km',
-  },
-  {
-    id: '3',
-    name: 'Animal Welfare NGO Clinic',
-    nameLocal: 'पशु कल्याण एनजीओ क्लिनिक',
-    type: 'ngo',
-    location: 'Durg, Sector 4',
-    phone: '+91 771 3456789',
-    medicines: ['Free Medicines', 'Vaccines', 'Emergency Supplies'],
-    rating: 4.8,
-    verified: true,
-    distance: '3.2 km',
-  },
-  {
-    id: '4',
-    name: 'Local Gaushala',
-    nameLocal: 'स्थानीय गौशाला',
-    type: 'gaushala',
-    location: 'Raipur, Village Area',
-    phone: '+91 771 4567890',
-    medicines: ['Ayurvedic', 'Traditional Remedies', 'Cattle Feed'],
-    rating: 4.0,
-    verified: false,
-    distance: '1.8 km',
-  },
-];
-
-const COMMON_MEDICINES = [
-  { name: 'Oxytetracycline', nameLocal: 'ऑक्सीटेट्रासाइक्लिन', use: 'Bacterial infections', useLocal: 'बैक्टीरियल संक्रमण' },
-  { name: 'Ivermectin', nameLocal: 'इवरमेक्टिन', use: 'Parasite control', useLocal: 'परजीवी नियंत्रण' },
-  { name: 'Calcium Supplement', nameLocal: 'कैल्शियम सप्लीमेंट', use: 'Milk fever prevention', useLocal: 'दूध बुखार रोकथाम' },
-  { name: 'Vitamin B Complex', nameLocal: 'विटामिन बी कॉम्प्लेक्स', use: 'General health', useLocal: 'सामान्य सेहत' },
-  { name: 'Antihistamine', nameLocal: 'एंटीहिस्टामाइन', use: 'Allergic reactions', useLocal: 'एलर्जी प्रतिक्रिया' },
-];
+import { MedicineService, Medicine } from '../services/MedicineService';
 
 export default function MedicineScreen() {
   const { language } = useLanguage();
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedFilter, setSelectedFilter] = useState<'all' | 'pharmacy' | 'veterinary' | 'ngo' | 'gaushala'>('all');
-  const [selectedTab, setSelectedTab] = useState<'stores' | 'medicines'>('stores');
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [medicines, setMedicines] = useState<Medicine[]>([]);
+  const [categories, setCategories] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedMedicine, setSelectedMedicine] = useState<Medicine | null>(null);
 
-  const filteredStores = MEDICINE_STORES.filter(store => {
-    const matchesSearch = 
-      store.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      store.nameLocal.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      store.location.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    const matchesFilter = selectedFilter === 'all' || store.type === selectedFilter;
-    
-    return matchesSearch && matchesFilter;
-  });
+  useEffect(() => {
+    loadMedicines();
+    loadCategories();
+  }, []);
 
-  const filters = [
-    { id: 'all', label: language === 'hi' ? 'सभी' : language === 'cg' ? 'सब' : 'All' },
-    { id: 'pharmacy', label: language === 'hi' ? 'फार्मेसी' : language === 'cg' ? 'फार्मेसी' : 'Pharmacy' },
-    { id: 'veterinary', label: language === 'hi' ? 'पशु चिकित्सा' : language === 'cg' ? 'पशु डाक्टर' : 'Veterinary' },
-    { id: 'ngo', label: 'NGO' },
-    { id: 'gaushala', label: language === 'hi' ? 'गौशाला' : language === 'cg' ? 'गौशाला' : 'Gaushala' },
-  ];
+  const loadMedicines = async () => {
+    setLoading(true);
+    setError(null);
 
-  const callStore = (phone: string, name: string) => {
-    Alert.alert(
-      language === 'hi' ? 'कॉल करें' : language === 'cg' ? 'कॉल करब' : 'Call',
-      `${phone}`,
-      [
-        { text: language === 'hi' ? 'रद्द करें' : language === 'cg' ? 'रद करब' : 'Cancel', style: 'cancel' },
-        { text: language === 'hi' ? 'कॉल करें' : language === 'cg' ? 'कॉल करब' : 'Call', onPress: () => {} },
-      ]
-    );
+    try {
+      const result = await MedicineService.getAllMedicines();
+      if (result.error) {
+        setError(result.error.message);
+      } else {
+        setMedicines(result.data || []);
+      }
+    } catch (err) {
+      setError('Failed to load medicines');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const renderStoreCard = (store: MedicineStore) => (
-    <View key={store.id} style={styles.storeCard}>
-      <View style={styles.storeHeader}>
-        <View style={styles.storeInfo}>
-          <Text style={styles.storeName}>{language === 'hi' || language === 'cg' ? store.nameLocal : store.name}</Text>
-          <View style={styles.storeMeta}>
-            <View style={styles.ratingContainer}>
-              <Ionicons name="star" size={14} color="#f59e0b" />
-              <Text style={styles.ratingText}>{store.rating}</Text>
-            </View>
-            {store.verified && (
-              <View style={styles.verifiedBadge}>
-                <Ionicons name="checkmark-circle" size={12} color="#10b981" />
-                <Text style={styles.verifiedText}>
-                  {language === 'hi' ? 'सत्यापित' : language === 'cg' ? 'सत्यापित' : 'Verified'}
-                </Text>
-              </View>
-            )}
-            {store.distance && (
-              <Text style={styles.distanceText}>{store.distance}</Text>
-            )}
+  const loadCategories = async () => {
+    try {
+      const result = await MedicineService.getCategories();
+      if (result.data) {
+        setCategories(result.data);
+      }
+    } catch (err) {
+      console.error('Failed to load categories');
+    }
+  };
+
+  const handleSearch = async () => {
+    if (!searchQuery.trim()) {
+      loadMedicines();
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const result = await MedicineService.searchMedicines(searchQuery);
+      if (result.error) {
+        setError(result.error.message);
+      } else {
+        setMedicines(result.data || []);
+      }
+    } catch (err) {
+      setError('Failed to search medicines');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCategoryFilter = async (category: string) => {
+    setSelectedCategory(category);
+    setLoading(true);
+
+    try {
+      const result = category === 'all'
+        ? await MedicineService.getAllMedicines()
+        : await MedicineService.getMedicinesByCategory(category);
+
+      if (result.error) {
+        setError(result.error.message);
+      } else {
+        setMedicines(result.data || []);
+      }
+    } catch (err) {
+      setError('Failed to filter medicines');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const renderMedicineCard = (medicine: Medicine) => (
+    <TouchableOpacity
+      key={medicine.id}
+      style={styles.card}
+      onPress={() => setSelectedMedicine(medicine)}
+    >
+      <View style={styles.cardHeader}>
+        <Text style={styles.cardTitle}>{medicine.name}</Text>
+        {medicine.availability === 'available' && (
+          <View style={styles.availableBadge}>
+            <Text style={styles.availableText}>Available</Text>
           </View>
+        )}
+      </View>
+      {medicine.category && (
+        <View style={styles.categoryBadge}>
+          <Text style={styles.categoryText}>{medicine.category}</Text>
         </View>
-        <TouchableOpacity
-          style={styles.callButton}
-          onPress={() => callStore(store.phone, store.name)}
-        >
-          <Ionicons name="call" size={20} color="#fff" />
+      )}
+      {medicine.description && (
+        <Text style={styles.cardDescription} numberOfLines={2}>
+          {medicine.description}
+        </Text>
+      )}
+      {medicine.manufacturer && (
+        <Text style={styles.cardManufacturer}>{medicine.manufacturer}</Text>
+      )}
+      {medicine.price_range && (
+        <Text style={styles.cardPrice}>{medicine.price_range}</Text>
+      )}
+    </TouchableOpacity>
+  );
+
+  const renderMedicineDetail = () => (
+    <ScrollView style={styles.detailContainer}>
+      <TouchableOpacity style={styles.backButton} onPress={() => setSelectedMedicine(null)}>
+        <Ionicons name="arrow-back" size={24} color="#4f46e5" />
+        <Text style={styles.backButtonText}>
+          {language === 'hi' ? 'वापस' : language === 'cg' ? 'वापस' : 'Back'}
+        </Text>
+      </TouchableOpacity>
+
+      <View style={styles.detailCard}>
+        <Text style={styles.detailTitle}>{selectedMedicine?.name}</Text>
+        {selectedMedicine?.category && (
+          <View style={styles.detailCategoryBadge}>
+            <Text style={styles.detailCategoryText}>{selectedMedicine.category}</Text>
+          </View>
+        )}
+        {selectedMedicine?.availability === 'available' && (
+          <View style={styles.detailAvailableBadge}>
+            <Text style={styles.detailAvailableText}>Available</Text>
+          </View>
+        )}
+
+        {selectedMedicine?.description && (
+          <View style={styles.detailSection}>
+            <Text style={styles.detailSectionTitle}>
+              {language === 'hi' ? 'विवरण' : language === 'cg' ? 'विवरण' : 'Description'}
+            </Text>
+            <Text style={styles.detailSectionContent}>{selectedMedicine.description}</Text>
+          </View>
+        )}
+
+        {selectedMedicine?.manufacturer && (
+          <View style={styles.detailSection}>
+            <Text style={styles.detailSectionTitle}>
+              {language === 'hi' ? 'निर्माता' : language === 'cg' ? 'निर्माता' : 'Manufacturer'}
+            </Text>
+            <Text style={styles.detailSectionContent}>{selectedMedicine.manufacturer}</Text>
+          </View>
+        )}
+
+        {selectedMedicine?.dosage && (
+          <View style={styles.detailSection}>
+            <Text style={styles.detailSectionTitle}>
+              {language === 'hi' ? 'खुराक' : language === 'cg' ? 'खुराक' : 'Dosage'}
+            </Text>
+            <Text style={styles.detailSectionContent}>{selectedMedicine.dosage}</Text>
+          </View>
+        )}
+
+        {selectedMedicine?.side_effects && (
+          <View style={styles.detailSection}>
+            <Text style={styles.detailSectionTitle}>
+              {language === 'hi' ? 'दुष्प्रभाव' : language === 'cg' ? 'दुष्प्रभाव' : 'Side Effects'}
+            </Text>
+            <Text style={styles.detailSectionContent}>{selectedMedicine.side_effects}</Text>
+          </View>
+        )}
+
+        {selectedMedicine?.contraindications && (
+          <View style={styles.detailSection}>
+            <Text style={styles.detailSectionTitle}>
+              {language === 'hi' ? 'विरोध-संकेत' : language === 'cg' ? 'विरोध-संकेत' : 'Contraindications'}
+            </Text>
+            <Text style={styles.detailSectionContent}>{selectedMedicine.contraindications}</Text>
+          </View>
+        )}
+
+        {selectedMedicine?.storage_requirements && (
+          <View style={styles.detailSection}>
+            <Text style={styles.detailSectionTitle}>
+              {language === 'hi' ? 'भंडारण' : language === 'cg' ? 'भंडारण' : 'Storage'}
+            </Text>
+            <Text style={styles.detailSectionContent}>{selectedMedicine.storage_requirements}</Text>
+          </View>
+        )}
+
+        {selectedMedicine?.price_range && (
+          <View style={styles.detailSection}>
+            <Text style={styles.detailSectionTitle}>
+              {language === 'hi' ? 'मूल्य सीमा' : language === 'cg' ? 'मूल्य सीमा' : 'Price Range'}
+            </Text>
+            <Text style={styles.detailSectionContent}>{selectedMedicine.price_range}</Text>
+          </View>
+        )}
+      </View>
+    </ScrollView>
+  );
+
+  if (selectedMedicine) {
+    return renderMedicineDetail();
+  }
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#4f46e5" />
+        <Text style={styles.loadingText}>
+          {language === 'hi' ? 'लोड हो रहा है...' : language === 'cg' ? 'लोड होरहा है...' : 'Loading...'}
+        </Text>
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.errorContainer}>
+        <Ionicons name="alert-circle" size={48} color="#ef4444" />
+        <Text style={styles.errorText}>{error}</Text>
+        <TouchableOpacity style={styles.retryButton} onPress={loadMedicines}>
+          <Text style={styles.retryButtonText}>
+            {language === 'hi' ? 'पुनः कोशिश करें' : language === 'cg' ? 'फेर कोशिश करें' : 'Retry'}
+          </Text>
         </TouchableOpacity>
       </View>
-
-      <View style={styles.storeDetails}>
-        <View style={styles.detailRow}>
-          <Ionicons name="location" size={16} color="#6b7280" />
-          <Text style={styles.detailText}>{store.location}</Text>
-        </View>
-        <View style={styles.detailRow}>
-          <Ionicons name="call" size={16} color="#6b7280" />
-          <Text style={styles.detailText}>{store.phone}</Text>
-        </View>
-      </View>
-
-      <View style={styles.medicinesSection}>
-        <Text style={styles.medicinesTitle}>
-          {language === 'hi' ? 'उपलब्ध दवाएं' : language === 'cg' ? 'उपलब्ध दवाई' : 'Available Medicines'}
-        </Text>
-        <View style={styles.medicinesTags}>
-          {store.medicines.slice(0, 3).map((medicine, index) => (
-            <View key={index} style={styles.medicineTag}>
-              <Text style={styles.medicineTagText}>{medicine}</Text>
-            </View>
-          ))}
-          {store.medicines.length > 3 && (
-            <Text style={styles.moreMedicines}>+{store.medicines.length - 3}</Text>
-          )}
-        </View>
-      </View>
-    </View>
-  );
-
-  const renderMedicineItem = (medicine: typeof COMMON_MEDICINES[0]) => (
-    <View key={medicine.name} style={styles.medicineItem}>
-      <View style={styles.medicineIcon}>
-        <Ionicons name="medkit" size={24} color="#4f46e5" />
-      </View>
-      <View style={styles.medicineDetails}>
-        <Text style={styles.medicineName}>{language === 'hi' || language === 'cg' ? medicine.nameLocal : medicine.name}</Text>
-        <Text style={styles.medicineUse}>
-          {language === 'hi' || language === 'cg' ? medicine.useLocal : medicine.use}
-        </Text>
-      </View>
-      <TouchableOpacity style={styles.infoButton}>
-        <Ionicons name="information-circle" size={24} color="#6b7280" />
-      </TouchableOpacity>
-    </View>
-  );
+    );
+  }
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>
-          {language === 'hi' ? 'दवा उपलब्धता' : language === 'cg' ? 'दवा उपलब्धता' : 'Medicine Availability'}
-        </Text>
-        <Text style={styles.subtitle}>
-          {language === 'hi' ? 'पास के फार्मेसी और दवाएं खोजें' : language === 'cg' ? 'पास के फार्मेसी और दवाई खोजब' : 'Find nearby pharmacies and medicines'}
+          {language === 'hi' ? 'दवा निर्देशिका' : language === 'cg' ? 'दवा निर्देशिका' : 'Medicine Directory'}
         </Text>
       </View>
 
-      {/* Tabs */}
-      <View style={styles.tabs}>
-        <TouchableOpacity
-          style={[styles.tab, selectedTab === 'stores' && styles.activeTab]}
-          onPress={() => setSelectedTab('stores')}
-        >
-          <Text style={[styles.tabText, selectedTab === 'stores' && styles.activeTabText]}>
-            {language === 'hi' ? 'दुकानें' : language === 'cg' ? 'दुकान' : 'Stores'}
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.tab, selectedTab === 'medicines' && styles.activeTab]}
-          onPress={() => setSelectedTab('medicines')}
-        >
-          <Text style={[styles.tabText, selectedTab === 'medicines' && styles.activeTabText]}>
-            {language === 'hi' ? 'दवाएं' : language === 'cg' ? 'दवाई' : 'Medicines'}
-          </Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Search */}
       <View style={styles.searchContainer}>
-        <Ionicons name="search" size={20} color="#9ca3af" />
         <TextInput
           style={styles.searchInput}
           placeholder={
-            selectedTab === 'stores'
-              ? language === 'hi' ? 'दुकान खोजें...' : language === 'cg' ? 'दुकान खोजब...' : 'Search stores...'
-              : language === 'hi' ? 'दवा खोजें...' : language === 'cg' ? 'दवा खोजब...' : 'Search medicines...'
+            language === 'hi' 
+              ? 'दवा खोजें...' 
+              : language === 'cg' 
+              ? 'दवा खोजब...' 
+              : 'Search medicines...'
           }
-          placeholderTextColor="#9ca3af"
           value={searchQuery}
           onChangeText={setSearchQuery}
+          onSubmitEditing={handleSearch}
         />
+        <TouchableOpacity style={styles.searchButton} onPress={handleSearch}>
+          <Ionicons name="search" size={20} color="#fff" />
+        </TouchableOpacity>
       </View>
 
-      {selectedTab === 'stores' ? (
-        <>
-          {/* Filters */}
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filtersContainer}>
-            {filters.map((filter) => (
-              <TouchableOpacity
-                key={filter.id}
-                style={[styles.filterButton, selectedFilter === filter.id && styles.activeFilter]}
-                onPress={() => setSelectedFilter(filter.id as any)}
-              >
-                <Text style={[styles.filterText, selectedFilter === filter.id && styles.activeFilterText]}>
-                  {filter.label}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-
-          {/* Store List */}
-          <ScrollView style={styles.content}>
-            {filteredStores.length > 0 ? (
-              filteredStores.map(renderStoreCard)
-            ) : (
-              <View style={styles.emptyState}>
-                <Ionicons name="storefront-outline" size={64} color="#9ca3af" />
-                <Text style={styles.emptyText}>
-                  {language === 'hi' ? 'कोई दुकान नहीं मिली' : language === 'cg' ? 'कोई दुकान ना मिले' : 'No stores found'}
-                </Text>
-              </View>
-            )}
-          </ScrollView>
-        </>
-      ) : (
-        <ScrollView style={styles.content}>
-          <View style={styles.medicinesHeader}>
-            <Text style={styles.medicinesHeaderTitle}>
-              {language === 'hi' ? 'सामान्य पशु दवाएं' : language === 'cg' ? 'सामान्य पशु दवाई' : 'Common Animal Medicines'}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.categoryScroll}
+        contentContainerStyle={styles.categoryScrollContent}
+      >
+        <TouchableOpacity
+          style={[styles.categoryChip, selectedCategory === 'all' && styles.selectedCategoryChip]}
+          onPress={() => handleCategoryFilter('all')}
+        >
+          <Text style={[styles.categoryChipText, selectedCategory === 'all' && styles.selectedCategoryChipText]}>
+            {language === 'hi' ? 'सभी' : language === 'cg' ? 'सब' : 'All'}
+          </Text>
+        </TouchableOpacity>
+        {categories.map((category) => (
+          <TouchableOpacity
+            key={category}
+            style={[styles.categoryChip, selectedCategory === category && styles.selectedCategoryChip]}
+            onPress={() => handleCategoryFilter(category)}
+          >
+            <Text style={[styles.categoryChipText, selectedCategory === category && styles.selectedCategoryChipText]}>
+              {category}
             </Text>
-            <Text style={styles.medicinesHeaderSubtitle}>
-              {language === 'hi' ? 'गाय, बैल, बकरी के लिए' : language === 'cg' ? 'गाय, सांड, बकरी खर' : 'For cows, bulls, goats'}
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
+
+      <ScrollView style={styles.content}>
+        {medicines.length === 0 ? (
+          <View style={styles.emptyContainer}>
+            <Ionicons name="medkit-outline" size={64} color="#9ca3af" />
+            <Text style={styles.emptyText}>
+              {language === 'hi' ? 'कोई दवा नहीं मिली' : language === 'cg' ? 'कोई दवा नहीं मिले' : 'No medicines found'}
             </Text>
           </View>
-          {COMMON_MEDICINES.map(renderMedicineItem)}
-        </ScrollView>
-      )}
+        ) : (
+          medicines.map(renderMedicineCard)
+        )}
+      </ScrollView>
     </View>
   );
 }
@@ -298,93 +326,70 @@ const styles = StyleSheet.create({
   },
   header: {
     padding: 16,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#f3f4f6',
+    paddingBottom: 8,
   },
   title: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: '700',
     color: '#111827',
-    marginBottom: 4,
-  },
-  subtitle: {
-    fontSize: 14,
-    color: '#6b7280',
-  },
-  tabs: {
-    flexDirection: 'row',
-    backgroundColor: '#fff',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f3f4f6',
-  },
-  tab: {
-    flex: 1,
-    paddingVertical: 8,
-    alignItems: 'center',
-    borderBottomWidth: 2,
-    borderBottomColor: 'transparent',
-  },
-  activeTab: {
-    borderBottomColor: '#4f46e5',
-  },
-  tabText: {
-    fontSize: 14,
-    color: '#6b7280',
-  },
-  activeTabText: {
-    color: '#4f46e5',
-    fontWeight: '600',
   },
   searchContainer: {
     flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#fff',
     margin: 16,
-    paddingHorizontal: 12,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
+    marginBottom: 8,
   },
   searchInput: {
     flex: 1,
-    padding: 12,
-    marginLeft: 8,
+    backgroundColor: '#ffffff',
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
     fontSize: 14,
-    color: '#111827',
-  },
-  filtersContainer: {
-    paddingHorizontal: 16,
-    marginBottom: 12,
-  },
-  filterButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    backgroundColor: '#fff',
     borderWidth: 1,
     borderColor: '#e5e7eb',
     marginRight: 8,
   },
-  activeFilter: {
+  searchButton: {
+    backgroundColor: '#4f46e5',
+    width: 48,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  categoryScroll: {
+    marginBottom: 8,
+  },
+  categoryScrollContent: {
+    paddingHorizontal: 16,
+    gap: 8,
+  },
+  categoryChip: {
+    backgroundColor: '#ffffff',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+  },
+  selectedCategoryChip: {
     backgroundColor: '#4f46e5',
     borderColor: '#4f46e5',
   },
-  filterText: {
-    fontSize: 12,
+  categoryChipText: {
+    fontSize: 14,
     color: '#6b7280',
   },
-  activeFilterText: {
-    color: '#fff',
+  selectedCategoryChipText: {
+    color: '#ffffff',
+    fontWeight: '600',
   },
   content: {
     flex: 1,
-    paddingHorizontal: 16,
+    padding: 16,
+    paddingTop: 0,
   },
-  storeCard: {
-    backgroundColor: '#fff',
+  card: {
+    backgroundColor: '#ffffff',
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
@@ -392,168 +397,181 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 2,
-    elevation: 1,
+    elevation: 2,
   },
-  storeHeader: {
+  cardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: 12,
+    alignItems: 'center',
+    marginBottom: 8,
   },
-  storeInfo: {
-    flex: 1,
-  },
-  storeName: {
+  cardTitle: {
     fontSize: 16,
     fontWeight: '600',
     color: '#111827',
-    marginBottom: 4,
+    flex: 1,
   },
-  storeMeta: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flexWrap: 'wrap',
-  },
-  ratingContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginRight: 8,
-  },
-  ratingText: {
-    fontSize: 12,
-    color: '#6b7280',
-    marginLeft: 2,
-  },
-  verifiedBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#d1fae5',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-    marginRight: 8,
-  },
-  verifiedText: {
-    fontSize: 10,
-    color: '#065f46',
-    marginLeft: 2,
-  },
-  distanceText: {
-    fontSize: 12,
-    color: '#6b7280',
-  },
-  callButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+  availableBadge: {
     backgroundColor: '#10b981',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  storeDetails: {
-    marginBottom: 12,
-  },
-  detailRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 4,
-  },
-  detailText: {
-    fontSize: 12,
-    color: '#6b7280',
-    marginLeft: 8,
-  },
-  medicinesSection: {
-    borderTopWidth: 1,
-    borderTopColor: '#f3f4f6',
-    paddingTop: 12,
-  },
-  medicinesTitle: {
-    fontSize: 12,
-    fontWeight: '500',
-    color: '#6b7280',
-    marginBottom: 8,
-  },
-  medicinesTags: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-  },
-  medicineTag: {
-    backgroundColor: '#f3f4f6',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 4,
-    marginRight: 4,
-    marginBottom: 4,
   },
-  medicineTagText: {
+  availableText: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: '#ffffff',
+  },
+  categoryBadge: {
+    backgroundColor: '#e0e7ff',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 4,
+    alignSelf: 'flex-start',
+    marginBottom: 8,
+  },
+  categoryText: {
     fontSize: 10,
-    color: '#4b5563',
+    fontWeight: '500',
+    color: '#4f46e5',
+    textTransform: 'capitalize',
   },
-  moreMedicines: {
-    fontSize: 10,
-    color: '#6b7280',
-    marginLeft: 4,
-  },
-  emptyState: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 48,
-  },
-  emptyText: {
+  cardDescription: {
     fontSize: 14,
     color: '#6b7280',
-    marginTop: 12,
+    marginBottom: 8,
   },
-  medicinesHeader: {
-    marginBottom: 16,
+  cardManufacturer: {
+    fontSize: 12,
+    color: '#9ca3af',
+    marginBottom: 4,
   },
-  medicinesHeaderTitle: {
-    fontSize: 18,
+  cardPrice: {
+    fontSize: 14,
     fontWeight: '600',
-    color: '#111827',
-    marginBottom: 4,
+    color: '#4f46e5',
   },
-  medicinesHeaderSubtitle: {
-    fontSize: 14,
-    color: '#6b7280',
+  detailContainer: {
+    flex: 1,
+    backgroundColor: '#f9fafb',
   },
-  medicineItem: {
+  backButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
+    padding: 16,
+    paddingBottom: 8,
+  },
+  backButtonText: {
+    fontSize: 16,
+    color: '#4f46e5',
+    marginLeft: 8,
+    fontWeight: '600',
+  },
+  detailCard: {
+    backgroundColor: '#ffffff',
+    margin: 16,
     borderRadius: 12,
     padding: 16,
-    marginBottom: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 2,
-    elevation: 1,
+    elevation: 2,
   },
-  medicineIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 12,
-    backgroundColor: '#eef2ff',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
+  detailTitle: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#111827',
+    marginBottom: 8,
   },
-  medicineDetails: {
-    flex: 1,
+  detailCategoryBadge: {
+    backgroundColor: '#e0e7ff',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+    alignSelf: 'flex-start',
+    marginBottom: 8,
   },
-  medicineName: {
+  detailCategoryText: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: '#4f46e5',
+    textTransform: 'capitalize',
+  },
+  detailAvailableBadge: {
+    backgroundColor: '#10b981',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+    alignSelf: 'flex-start',
+    marginBottom: 16,
+  },
+  detailAvailableText: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: '#ffffff',
+  },
+  detailSection: {
+    marginTop: 16,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#f3f4f6',
+  },
+  detailSectionTitle: {
     fontSize: 14,
     fontWeight: '600',
     color: '#111827',
-    marginBottom: 2,
+    marginBottom: 8,
   },
-  medicineUse: {
-    fontSize: 12,
+  detailSectionContent: {
+    fontSize: 14,
+    color: '#6b7280',
+    lineHeight: 20,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 32,
+  },
+  emptyText: {
+    fontSize: 16,
+    color: '#6b7280',
+    marginTop: 16,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f9fafb',
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 14,
     color: '#6b7280',
   },
-  infoButton: {
-    padding: 8,
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f9fafb',
+    padding: 32,
+  },
+  errorText: {
+    marginTop: 12,
+    fontSize: 14,
+    color: '#ef4444',
+    textAlign: 'center',
+  },
+  retryButton: {
+    marginTop: 16,
+    backgroundColor: '#4f46e5',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: '#ffffff',
+    fontWeight: '600',
   },
 });
