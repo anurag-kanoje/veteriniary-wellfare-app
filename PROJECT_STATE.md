@@ -1,11 +1,11 @@
 # Veterinary App - Project State
 
 **Last Updated**: October 21, 2026
-**Status**: ✅ PHASE 2 COMPLETE - ALL SCREENS USE REAL DATA
+**Status**: ✅ PHASE 3 IN PROGRESS - IMAGE UPLOAD INTEGRATION
 
 ## Current State Summary
 
-The Veterinary Welfare App has successfully completed **Phase 2**: All screens now use real database data. The app has 8 services and 7 screens with real data integration.
+The Veterinary Welfare App has completed **Phase 2** (all screens use real data) and started **Phase 3** (image upload integration). The app has 8 services, 7 screens with real data, and image upload for animal profiles.
 
 ### ✅ Real Implementation Completed
 
@@ -42,8 +42,8 @@ The Veterinary Welfare App has successfully completed **Phase 2**: All screens n
 
 **Animal Management** (REAL):
 1. **AnimalsScreen** - ✅ Real data from database
-2. **AddEditAnimalScreen** - ✅ Real create/update operations
-3. **AnimalProfileScreen** - ✅ Real view/delete operations
+2. **AddEditAnimalScreen** - ✅ Real create/update operations with photo upload
+3. **AnimalProfileScreen** - ✅ Real view/delete operations with photo display
 4. **AddHealthRecordScreen** - ✅ Real health record creation
 
 **Main App Screens** (REAL):
@@ -127,13 +127,21 @@ The Veterinary Welfare App has successfully completed **Phase 2**: All screens n
 - [x] Update MedicineScreen to use real data
 - [x] Update LeaderboardScreen (placeholder - Coming Soon)
 
-### Phase 5: Database & Storage ✅ COMPLETE (MIGRATIONS READY)
+### Phase 5: Database & Storage ✅ COMPLETE (MIGRATIONS APPLIED)
 - [x] Create migration files (001_initial_schema.sql, 002_storage_buckets.sql)
 - [x] Create ImageService for Supabase Storage
 - [x] Create DATABASE_SETUP_INSTRUCTIONS.md
-- [ ] Apply migrations to real Supabase (USER ACTION REQUIRED)
+- [x] Apply migrations to real Supabase (USER COMPLETED)
 - [ ] Test RLS policies on real database (USER ACTION REQUIRED)
-- [ ] Integrate ImageService into screens (NEXT)
+- [x] Integrate ImageService into AddEditAnimalScreen
+- [x] Integrate ImageService into AnimalProfileScreen
+- [ ] Integrate ImageService into AddHealthRecordScreen (NEXT)
+
+### Phase 6: Image Upload Integration 🔄 IN PROGRESS
+- [x] Integrate ImageService into AddEditAnimalScreen
+- [x] Integrate ImageService into AnimalProfileScreen
+- [ ] Integrate ImageService into AddHealthRecordScreen
+- [ ] Add image compression for rural areas
 
 ## 🔗 Key Files
 
@@ -175,22 +183,20 @@ The Veterinary Welfare App has successfully completed **Phase 2**: All screens n
 
 ## 🎯 Next Session Priority
 
-**IMMEDIATE NEXT TASK**: Apply database migrations to real Supabase
+**IMMEDIATE NEXT TASK**: Continue Image Upload Integration
 
 **Order**:
-1. USER ACTION: Apply migrations/001_initial_schema.sql to real Supabase
-2. USER ACTION: Apply migrations/002_storage_buckets.sql to real Supabase
-3. Test all real workflows with actual database
-4. Integrate ImageService into animal/health record screens
-5. Add real profile updates to ProfileScreen
-6. Add real gaushala data to GaushalaScreen
+1. Integrate ImageService into AddHealthRecordScreen
+2. Add real profile updates to ProfileScreen
+3. Add real gaushala data to GaushalaScreen
+4. Test all real workflows with actual database
+5. Test RLS policies on real database (USER ACTION)
 
 ## ⚠️ Critical Issues
 
-1. **Database Not Applied**: Migrations need to be executed on real Supabase (USER ACTION REQUIRED)
-2. **Image Upload Not Integrated**: ImageService created but not used in screens yet
-3. **Profile Screen**: Needs real profile update functionality
-4. **Gaushala Screen**: Needs real gaushala data
+1. **Image Upload Partial**: Integrated into animal screens, not health records yet
+2. **Profile Screen**: Needs real profile update functionality
+3. **Gaushala Screen**: Needs real gaushala data
 
 ## 📝 Development Notes
 
@@ -210,26 +216,38 @@ The Veterinary Welfare App has successfully completed **Phase 2**: All screens n
 - Updated MedicineScreen to use real MedicineService data
 - Updated LeaderboardScreen to "Coming Soon" placeholder (no DB table yet)
 
+**Phase 3: Image Upload Integration (IN PROGRESS)**:
+- USER ACTION: Applied database migrations to real Supabase ✅
+- Integrated ImageService into AddEditAnimalScreen
+  - Added photo selection from device gallery
+  - Added image preview with remove option
+  - Added photo upload to Supabase Storage on save
+  - Added loading state for image upload
+- Integrated ImageService into AnimalProfileScreen
+  - Display animal photo if photo_url exists
+  - Show placeholder if no photo
+  - Updated profile image styling
+
 **Complete Workflows Now Working**:
 1. Register → Create real user account
 2. Login → Authenticate with Supabase
 3. Dashboard → Shows real animal count
 4. My Animals → List animals from database
-5. Add Animal → Form with validation, saves to database
-6. View Animal → Opens AnimalProfileScreen
+5. Add Animal → Form with validation, photo upload, saves to database
+6. View Animal → Opens AnimalProfileScreen with photo display
 7. View Health Records → Shows records from database
 8. Add Health Record → Form with record type selection, saves to database
 9. Consultations → View real consultation data
 10. Community → View real posts, create new posts
 11. Rescue → Submit rescue reports, view NGOs
 12. Medicine → Search and view medicine directory
-13. Edit Animal → Updates database row
+13. Edit Animal → Updates database row with photo
 14. Delete Animal → Removes from database with confirmation
 15. Refresh → All data persists (stored in Supabase)
 
 **Remaining Work**:
-- USER ACTION: Apply database migrations to real Supabase (see DATABASE_SETUP_INSTRUCTIONS.md)
-- Integrate ImageService into animal/health record screens for photo upload
+- Integrate ImageService into AddHealthRecordScreen
 - Add real profile updates to ProfileScreen
 - Add real gaushala data to GaushalaScreen
 - Design and implement leaderboard database table
+- Test RLS policies on real database (USER ACTION)
