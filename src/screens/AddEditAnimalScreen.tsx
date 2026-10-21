@@ -8,12 +8,15 @@ import {
   ScrollView,
   Alert,
   ActivityIndicator,
+  Image,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { AnimalService, CreateAnimalInput, UpdateAnimalInput, Animal } from '../services/AnimalService';
+import { ImageService } from '../services/ImageService';
 
 type RouteParams = {
   AddEditAnimal: {
@@ -47,6 +50,8 @@ export default function AddEditAnimalScreen() {
   const [isEditing, setIsEditing] = useState(!!animalId);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [imageUri, setImageUri] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -81,12 +86,37 @@ export default function AddEditAnimalScreen() {
           weight: '',
           health_status: data.health_status || 'healthy',
         });
+        if (data.photo_url) {
+          setImageUri(data.photo_url);
+        }
       }
     } catch (err: any) {
       Alert.alert('Error', err.message);
       navigation.goBack();
     } finally {
       setLoading(false);
+    }
+  };
+
+  const pickImage = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert(
+        language === 'hi' ? 'Permission Required' : language === 'cg' ? 'Permission Required' : 'Permission Required',
+        language === 'hi' ? 'Please allow photo library access' : language === 'cg' ? 'Please allow photo library access' : 'Please allow photo library access'
+      );
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 0.8,
+    });
+
+    if (!result.canceled && result.assets && result.assets.length > 0 && result.assets[0]) {
+      setImageUri(result.assets[0].uri);
     }
   };
 
@@ -109,13 +139,31 @@ export default function AddEditAnimalScreen() {
     }
 
     setSaving(true);
+    let photoUrl: string | undefined = undefined;
+
     try {
+      // Upload image if selected
+      if (imageUri) {
+        setUploadingImage(true);
+        const imageResult = await ImageService.uploadImage(
+          imageUri,
+          'animal-profiles',
+          `animal-${Date.now()}`
+        );
+        if (imageResult.error) {
+          throw imageResult.error;
+        }
+        photoUrl = imageResult.data?.publicUrl;
+        setUploadingImage(false);
+      }
+
       const input: CreateAnimalInput = {
         name: formData.name.trim(),
         species: formData.species,
         breed: formData.breed.trim() || undefined,
         date_of_birth: formData.date_of_birth || undefined,
         health_status: formData.health_status,
+        photo_url: photoUrl,
       };
 
       if (isEditing) {
@@ -149,6 +197,7 @@ export default function AddEditAnimalScreen() {
       );
     } finally {
       setSaving(false);
+      setUploadingImage(false);
     }
   };
 
@@ -178,6 +227,36 @@ export default function AddEditAnimalScreen() {
       </View>
 
       <View style={styles.form}>
+        {/* Photo Upload */}
+        <View style={styles.field}>
+          <Text style={styles.label}>
+            {language === 'hi' ? 'फोटो' : language === 'cg' ? 'फोटो' : 'Photo'}
+          </Text>
+          <TouchableOpacity style={styles.imageUploadButton} onPress={pickImage}>
+            {imageUri ? (
+              <Image source={{ uri: imageUri }} style={styles.previewImage} />
+            ) : (
+              <View style={styles.imagePlaceholder}>
+                <Ionicons name="camera-outline" size={32} color="#9ca3af" />
+                <Text style={styles.imagePlaceholderText}>
+                  {language === 'hi' ? 'फोटो जोड़ें' : language === 'cg' ? 'फोटो जोड़ब' : 'Add Photo'}
+                </Text>
+              </View>
+            )}
+          </TouchableOpacity>
+          {imageUri && (
+            <TouchableOpacity
+              style={styles.removeImageButton}
+              onPress={() => setImageUri(null)}
+            >
+              <Ionicons name="close-circle" size={20} color="#ef4444" />
+              <Text style={styles.removeImageText}>
+                {language === 'hi' ? 'हटाएं' : language === 'cg' ? 'हटाब' : 'Remove'}
+              </Text>
+            </TouchableOpacity>
+          )}
+        </View>
+
         {/* Name */}
         <View style={styles.field}>
           <Text style={styles.label}>
@@ -408,5 +487,41 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     marginLeft: 8,
+  },
+  imageUploadButton: {
+    backgroundColor: '#f9fafb',
+    borderWidth: 2,
+    borderColor: '#d1d5db',
+    borderStyle: 'dashed',
+    borderRadius: 12,
+    height: 200,
+    justifyContent: 'center',
+    alignItems: 'center',
+    overflow: 'hidden',
+  },
+  imagePlaceholder: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  imagePlaceholderText: {
+    fontSize: 14,
+    color: '#9ca3af',
+    marginTop: 8,
+  },
+  previewImage: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
+  },
+  removeImageButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 8,
+    alignSelf: 'flex-start',
+  },
+  removeImageText: {
+    fontSize: 14,
+    color: '#ef4444',
+    marginLeft: 4,
   },
 });
