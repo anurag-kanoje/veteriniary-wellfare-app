@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Alert,
   ActivityIndicator,
+  Image,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -158,13 +159,17 @@ export default function AnimalProfileScreen() {
       </View>
 
       <View style={styles.content}>
-        {/* Profile Image Placeholder */}
-        <View style={styles.profileImagePlaceholder}>
-          <Ionicons name="paw" size={64} color="#d1d5db" />
-          <Text style={styles.placeholderText}>
-            {language === 'hi' ? 'फोटो जोड़ें' : language === 'cg' ? 'फोटो जोड़ब' : 'Add Photo'}
-          </Text>
-        </View>
+        {/* Profile Image */}
+        {animal.photo_url ? (
+          <Image source={{ uri: animal.photo_url }} style={styles.profileImage} />
+        ) : (
+          <View style={styles.profileImagePlaceholder}>
+            <Ionicons name="paw" size={64} color="#d1d5db" />
+            <Text style={styles.placeholderText}>
+              {language === 'hi' ? 'फोटो जोड़ें' : language === 'cg' ? 'फोटो जोड़ब' : 'Add Photo'}
+            </Text>
+          </View>
+        )}
 
         {/* Basic Info */}
         <View style={styles.section}>
@@ -381,6 +386,13 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: '#e5e7eb',
     borderStyle: 'dashed',
+  },
+  profileImage: {
+    width: '100%',
+    height: 250,
+    borderRadius: 12,
+    marginBottom: 24,
+    resizeMode: 'cover',
   },
   placeholderText: {
     marginTop: 12,
